@@ -576,7 +576,7 @@ function KnowledgeBase() {
       <div style={{ textAlign:"center" }}>
         <p style={{ margin:0, fontFamily:C.font, fontSize:".83rem", fontWeight:700, color:C.text }}>Drop files here or click to browse</p>
         <p style={{ margin:"3px 0 0", fontFamily:C.font, fontSize:".71rem", color:C.textMuted, lineHeight:1.5 }}>
-          Catering menus, allergen charts, policy docs — referenced during calls
+          Product catalogs, shipping terms, pricing agreements — referenced during calls
         </p>
       </div>
       <PlannedBadge />
@@ -806,17 +806,17 @@ export default function SettingsPage() {
         />
         <CardBody>
           <div className="vx-g2">
-            <Field label="Fulfillment Prep Time">
-              <WaitTimeSelect value={f.wait_time_pickup??""} onChange={(v)=>upd("wait_time_pickup",v)} placeholder="Select pickup wait…" />
+            <Field label="Dispatch Preparation Time">
+              <WaitTimeSelect value={f.wait_time_pickup??""} onChange={(v)=>upd("wait_time_pickup",v)} placeholder="Select prep time…" />
             </Field>
-            <Field label="Shipping/Delivery Time">
+            <Field label="Wholesale Delivery Time">
               <WaitTimeSelect value={f.wait_time_delivery??""} onChange={(v)=>upd("wait_time_delivery",v)} placeholder="Select delivery wait…" />
             </Field>
           </div>
           <SectionDivider label="Warehouse Operations Hours" />
           <div className="vx-g2s">
-            <Field label="Default Opens"><TimeSelect value={f.kitchen_open_time??""} onChange={(v)=>upd("kitchen_open_time",v)} /></Field>
-            <Field label="Default Closes"><TimeSelect value={f.kitchen_close_time??""} onChange={(v)=>upd("kitchen_close_time",v)} /></Field>
+            <Field label="Warehouse Opens"><TimeSelect value={f.kitchen_open_time??""} onChange={(v)=>upd("kitchen_open_time",v)} /></Field>
+            <Field label="Warehouse Closes"><TimeSelect value={f.kitchen_close_time??""} onChange={(v)=>upd("kitchen_close_time",v)} /></Field>
           </div>
           <SectionDivider label="Per-Day Warehouse Schedule" />
           <WeeklyScheduleEditor value={f.kitchen_hours} onChange={(v)=>upd("kitchen_hours",v)} defaultOpen={f.kitchen_open_time??"11:00"} defaultClose={f.kitchen_close_time??"21:40"} />
@@ -908,7 +908,7 @@ export default function SettingsPage() {
         <CardHeader title="Call Greetings" subtitle="The first thing the AI says when a call connects" icon={<MessageSquare size={14} />} />
         <CardBody>
           <Field label="Open Greeting" hint="Plays when your business is open. Keep it friendly and under 30 words.">
-            <textarea rows={3} spellCheck value={f.open_greeting??""} onChange={(e)=>upd("open_greeting",e.target.value)} placeholder="Thanks for calling Mitchell's! Would you like to place an order for pickup or shipping?" />
+            <textarea rows={3} spellCheck value={f.open_greeting??""} onChange={(e)=>upd("open_greeting",e.target.value)} placeholder="Thanks for calling Mitchell's! Would you like to place a distributor order for pickup or shipping?" />
           </Field>
           <Field label="Closed Greeting" hint="Plays when the office is closed. Let callers know when to call back.">
             <textarea rows={3} spellCheck value={f.closed_greeting??""} onChange={(e)=>upd("closed_greeting",e.target.value)} placeholder="Thanks for calling! We're currently closed. Our office opens at 8 AM — we'd love to assist you then!" />

@@ -1,3 +1,11 @@
+# ==============================================================================
+# DATABASE CONFIGURATION & SCHEMAS (SQLAlchemy ORM Models)
+# ==============================================================================
+# This file sets up our database connection engine and defines the tables
+# (schemas) using SQLAlchemy's modern ORM (Object-Relational Mapping) features.
+# It also implements automatic schema initialization and DDL migrations.
+# ==============================================================================
+
 import os
 import uuid
 from datetime import datetime, timezone, date
@@ -7,19 +15,42 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship
 from sqlalchemy import String, Boolean, DateTime, Text, Integer, BigInteger, JSON, Date, Float, ForeignKey
 
+# 1. DATABASE CONNECTION SETUP
+# Retrieve the database connection URL from the environment config.
+# Expected format: postgresql+asyncpg://<username>:<password>@<host>:<port>/<dbname>
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Create the Asynchronous Engine:
+# - 'echo=False' prevents logging every executed SQL statement to the console.
+# - 'poolclass=NullPool' disables connection pooling, ensuring each session
+#   opens and closes a fresh physical connection (excellent for serverless/ASGI).
 engine = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool)
+
+# Create the Session Maker:
+# - 'expire_on_commit=False' prevents SQLAlchemy from refreshing database objects
+#   automatically after a 'commit', which is essential for async operations to avoid
+#   unexpected lazy-loading database calls.
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
+# 2. BASE DECLARATIVE CLASS
+# The parent class for all our database model classes. Subclassing this
+# registers our models in SQLAlchemy's metadata registry, allowing it to
+# generate SQL tables dynamically.
 class Base(DeclarativeBase):
     pass
 
 
+# 3. DATABASE MODELS (TABLES)
+
 class User(Base):
+    """
+    User Table: Stores administrator credentials for the management dashboard portal.
+    """
     __tablename__ = "users"
 
+    # Mapped[str] defines the Python type. mapped_column defines database column settings.
+    # We use a lambda for default to generate a new UUID string on every insertion.
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
@@ -32,6 +63,9 @@ class User(Base):
 
 
 class Caller(Base):
+    """
+    Caller Table: Keeps track of callers by phone number to recognize returning clients.
+    """
     __tablename__ = "callers"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -43,6 +77,9 @@ class Caller(Base):
 
 
 class CallLog(Base):
+    """
+    CallLog Table: Logs the full details of every voice call handled by the Retell AI agent.
+    """
     __tablename__ = "call_logs"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -70,6 +107,8 @@ class CallLog(Base):
     party_size: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+    # ORM Relationship: Allows us to access the associated order directly (e.g. call_log.order_details)
+    # - 'selectin' loads this relationship proactively in a secondary query to prevent lazy-loading crashes.
     order_details: Mapped["Order"] = relationship(
         "Order",
         primaryjoin="Order.call_id == CallLog.call_id",
@@ -80,6 +119,10 @@ class CallLog(Base):
 
 
 class AgentSettings(Base):
+    """
+    AgentSettings Table: Stores parameters that adjust the Retell AI Voice agent's behavior
+    and the company's operating attributes (business hours, timezone, greetings).
+    """
     __tablename__ = "agent_settings"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -107,6 +150,9 @@ class AgentSettings(Base):
 
 
 class Order(Base):
+    """
+    Order Table: Tracks customer orders placed during calls or manual submissions.
+    """
     __tablename__ = "orders"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -128,6 +174,9 @@ class Order(Base):
 
 
 class MenuCategory(Base):
+    """
+    MenuCategory Table: Product categories (e.g., 'Jams & Marmalades', 'Squashes').
+    """
     __tablename__ = "menu_categories"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -139,6 +188,9 @@ class MenuCategory(Base):
 
 
 class MenuItem(Base):
+    """
+    MenuItem Table: Individual items available in the catalog, linked to Clover IDs.
+    """
     __tablename__ = "menu_items"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -156,6 +208,9 @@ class MenuItem(Base):
 
 
 class MenuSpecial(Base):
+    """
+    MenuSpecial Table: Defines active promotional deals.
+    """
     __tablename__ = "menu_specials"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -172,6 +227,9 @@ class MenuSpecial(Base):
 
 
 class Prompt(Base):
+    """
+    Prompt Table: Holds conversation instruction versions for the Voice agent.
+    """
     __tablename__ = "prompts"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -184,6 +242,9 @@ class Prompt(Base):
 
 
 class CloverItemMap(Base):
+    """
+    CloverItemMap Table: Explicit map matching local product names to Clover POS items.
+    """
     __tablename__ = "clover_item_map"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -196,6 +257,9 @@ class CloverItemMap(Base):
 
 
 class TradeInquiry(Base):
+    """
+    TradeInquiry Table: Records B2B Trade & wholesale query registrations.
+    """
     __tablename__ = "trade_inquiries"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -211,6 +275,9 @@ class TradeInquiry(Base):
 
 
 class ExportInquiry(Base):
+    """
+    ExportInquiry Table: Records international export registrations.
+    """
     __tablename__ = "export_inquiries"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -225,6 +292,9 @@ class ExportInquiry(Base):
 
 
 class Complaint(Base):
+    """
+    Complaint Table: Logs customer service and quality complaints.
+    """
     __tablename__ = "complaints"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -240,6 +310,9 @@ class Complaint(Base):
 
 
 class CallbackRequest(Base):
+    """
+    CallbackRequest Table: Records telephone callback requests.
+    """
     __tablename__ = "callback_requests"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -251,27 +324,43 @@ class CallbackRequest(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
-
+# 4. FASTAPI DEPENDENCY YIELDER
 async def get_db():
+    """
+    FastAPI dependency that opens a new async database session,
+    yields it to the request handler, and guarantees closure
+    when the HTTP request completes.
+    """
     async with AsyncSessionLocal() as session:
         yield session
 
 from sqlalchemy import text
 
 
+# 5. DDL MIGRATION UTILITIES
 async def _run_migration(sql: str) -> None:
-    """Run a single DDL statement in its own transaction so failures are isolated."""
+    """
+    Executes a single raw DDL SQL query statement.
+    Wraps it in its own connection transaction block so that failures are isolated.
+    """
     try:
         async with engine.begin() as conn:
             await conn.execute(text(sql))
     except Exception:
+        # Ignore issues (e.g. if column already exists)
         pass
 
 
 async def init_db():
+    """
+    Creates all physical tables in PostgreSQL if they do not exist,
+    and runs specific manual schema migration steps.
+    """
+    # 1. Create tables from SQLAlchemy registry
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # 2. Sequential migrations list to adapt production DB without complex migration scripts (like Alembic)
     migrations = [
         "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS restaurant_info VARCHAR DEFAULT 'We are open daily from 11am to 10pm.'",
         "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS wait_time_pickup VARCHAR DEFAULT '15'",
@@ -285,3 +374,4 @@ async def init_db():
     ]
     for sql in migrations:
         await _run_migration(sql)
+

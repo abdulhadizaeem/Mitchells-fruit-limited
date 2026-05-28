@@ -1,3 +1,11 @@
+# ==============================================================================
+# ROUTER: RETELL AI INTEGRATIONS & OPERATIONS
+# ==============================================================================
+# This module orchestrates all API endpoints relating to the Retell AI Voice
+# Agent. It serves as the primary webhook destination for Retell callbacks,
+# handles B2B inquiries logging, drafts/matches orders, and manages Clover POS mappings.
+# ==============================================================================
+
 import os
 from datetime import datetime, date, timezone
 
@@ -8,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# Imports for database query dependencies
 from src.utils.db import get_db, User, Caller
 from src.utils.dependencies import get_current_user
 from src.utils.db_functions import (
@@ -523,7 +532,17 @@ async def create_order_from_call(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    """Manually create and sync a formal Clover order from an AI-extracted call draft."""
+    """
+    Endpoint: Manually confirms and submits an order extracted from a Call Log draft.
+    
+    How this works:
+      1. Confirms the Call Log exists.
+      2. Creates a formal Order record.
+      3. Marks 'order_booked=True' on the Call Log.
+      4. Saves/upserts the Caller information.
+      5. Matches items to active database prices and submits the order to Clover POS.
+    """
+    # 1. Verify Call Log exists
     log = await get_call_log_by_call_id(db, call_id)
     if not log:
         raise HTTPException(
@@ -531,7 +550,7 @@ async def create_order_from_call(
             detail="Call log not found"
         )
 
-    # 1. Create the Order
+    # 2. Record the new Order in PostgreSQL
     order = await create_order(
         db,
         caller_phone=body.customer_phone,
@@ -544,16 +563,17 @@ async def create_order_from_call(
         call_id=call_id,
     )
 
-    # 2. Update the CallLog
+    # 3. Mark call log as successful/booked
     await update_call_log(
         db,
         call_id=call_id,
         order_booked=True,
     )
 
+    # 4. Upsert Caller history records
     await upsert_caller(db, body.customer_phone, body.customer_name)
 
-    # 3. Sync to Clover if configuration exists
+    # 5. Sync to Clover POS if config keys are defined in environmental variables
     import logging
     from src.services import clover_service
     from src.utils.db_functions import update_order_clover_status, get_menu_items_prices
@@ -561,22 +581,28 @@ async def create_order_from_call(
 
     if os.getenv("CLOVER_API_TOKEN") and os.getenv("CLOVER_MERCHANT_ID"):
         try:
+            # Look up verified pricing from database to prevent price manipulation
             item_names = [i.get("item", "") for i in body.order_items]
             prices_map = await get_menu_items_prices(db, item_names)
+            
             enhanced_items = []
             for item in body.order_items:
                 name = item.get("item", "Unknown Item")
                 db_price = prices_map.get(name.lower(), 0.0)
                 enhanced_item = dict(item)
-                enhanced_item["price"] = db_price
+                enhanced_item["price"] = db_price  # Enforce database price
                 enhanced_items.append(enhanced_item)
 
+            # Trigger Clover Atomic Order API call
             clover_result = await clover_service.push_order_to_clover(
                 order_items=enhanced_items,
                 customer_name=body.customer_name,
             )
+            
+            # Save success state
             await update_order_clover_status(db, order.order_id, clover_result["clover_order_id"], True)
         except Exception as exc:
+            # Save error message to order record if POS sync failed
             _logger.error("Clover push failed: %s", exc)
             await update_order_clover_status(db, order.order_id, None, False, str(exc))
 
@@ -586,14 +612,25 @@ async def create_order_from_call(
 
 @router.post("/order-confirm")
 async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint: Called by the Retell Voice Agent *during* a live call to place an order.
+    
+    This is an API endpoint invoked as a custom tool-call by the LLM.
+    Returns a conversational confirmation message that the voice agent speaks back to the caller.
+    """
+    # 1. Parse raw request JSON payload
     try:
         raw = await request.json()
     except Exception:
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
+        
+    # 2. Validate payload matching the Pydantic schema
     try:
         body = OrderConfirmRequest(**raw)
     except Exception as e:
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+        
+    # 3. Validate input parameters
     if body.order_type not in ALLOWED_ORDER_TYPES:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -604,7 +641,11 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="Delivery address is required for delivery orders.",
         )
+        
+    # 4. Fetch the Retell call ID from headers to link this order
     call_id = request.headers.get("x-retell-call-id")
+    
+    # 5. Create Order in local database
     order = await create_order(
         db,
         caller_phone=body.customer_phone,
@@ -618,6 +659,7 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
     )
     await upsert_caller(db, body.customer_phone, body.customer_name)
 
+    # 6. Synchronize immediately to Clover cloud POS
     import logging
     from src.services import clover_service
     from src.utils.db_functions import update_order_clover_status, get_menu_items_prices
@@ -625,11 +667,9 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
 
     if os.getenv("CLOVER_API_TOKEN") and os.getenv("CLOVER_MERCHANT_ID"):
         try:
-            # Look up prices from DB based on item names
             item_names = [i.get("item", "") for i in body.order_items]
             prices_map = await get_menu_items_prices(db, item_names)
             
-            # Attach prices to the items
             enhanced_items = []
             for item in body.order_items:
                 name = item.get("item", "Unknown Item")
@@ -647,6 +687,7 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
             _logger.error("Clover push failed: %s", exc)
             await update_order_clover_status(db, order.order_id, None, False, str(exc))
 
+    # 7. Formulate speaking response message for voice agent
     messages = {
         "pickup": "Your order has been confirmed. It will be ready for pickup in about 15 minutes.",
         "delivery": "Your order has been confirmed and will be delivered to you in about 30 minutes.",
@@ -656,16 +697,31 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.post("/inbound-webhook", response_model=InboundWebhookResponse)
 async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint: Webhook called by Retell AI when a phone call is initiated (inbound call starts).
+    
+    Why this is used:
+    Retell asks our backend for 'dynamic variables' to customize the conversation prompt.
+    We return parameters like caller name, store-open states, and catalog menus.
+    """
+    # 1. Parse payload details
     try:
         event = await request.json()
     except Exception:
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
+        
     call_inbound = event.get("call_inbound", {})
     from_number = call_inbound.get("from_number", "")
+    
+    # 2. Query caller history matching the phone number
     existing_caller = await get_caller_by_phone(db, from_number)
     dynamic_vars = retell_service.build_caller_dynamic_variables(existing_caller, from_number)
+    
+    # 3. Log/update caller details and log last-call timestamps
     await upsert_caller(db, from_number, existing_caller.customer_name if existing_caller else None)
     await update_caller_last_called(db, from_number)
+    
+    # 4. Fetch store and kitchen open hours rules
     settings = await get_agent_settings(db)
     try:
         from zoneinfo import ZoneInfo
@@ -673,13 +729,19 @@ async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     except Exception:
         from datetime import timezone as _tz
         tz = _tz.utc
+        
+    # Get current time in local merchant timezone (e.g. Pakistan timezone)
     now_hhmm = datetime.now(tz).strftime("%H:%M")
+    
+    # 5. Evaluate if offices and warehouses are open
     if settings.is_active:
         store_open = "true" if _check_business_hours(now_hhmm, settings.store_open_time, settings.store_close_time) else "false"
         kitchen_open = "true" if _check_business_hours(now_hhmm, settings.kitchen_open_time, settings.kitchen_close_time) else "false"
     else:
         store_open = "false"
         kitchen_open = "false"
+        
+    # 6. Bind variables to response payload dictionary
     dynamic_vars["kitchen_is_open"] = kitchen_open
     dynamic_vars["store_is_open"] = store_open
     dynamic_vars["menu"] = await build_menu_text(db)
@@ -693,6 +755,7 @@ async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     dynamic_vars["wait_time_delivery"] = settings.wait_time_delivery or "30"
     dynamic_vars["kitchen_open_time"] = settings.kitchen_open_time
     dynamic_vars["kitchen_close_time"] = settings.kitchen_close_time
+    
     return InboundWebhookResponse(
         call_inbound=InboundCallInnerResponse(
             dynamic_variables=InboundDynamicVariables(**dynamic_vars)
@@ -702,16 +765,31 @@ async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.post("/webhook", response_model=WebhookResponse)
 async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint: Main webhook listener that receives event notifications from Retell AI.
+    
+    This handles two major event types:
+      1. 'call_ended': Fired immediately when the call finishes.
+         Here we fetch transcripts, caller phone, name, and try to auto-extract ordered items.
+      2. 'call_analyzed': Fired a few seconds later after LLM completes call summaries.
+         Here we extract custom analysis parameters (sentiment, booked indicators, export inquiry details).
+    """
+    # 1. Parse payload body
     try:
         event = await request.json()
     except Exception:
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
+        
     event_type = event.get("event")
     call_data = event.get("call", {})
     call_id = call_data.get("call_id", "")
+    
+    # ==================== CASE A: CALL ENDED ====================
     if event_type == "call_ended":
         from_number = call_data.get("from_number", "")
         direction = call_data.get("direction", "inbound")
+        
+        # Extract variables collected from conversational tool calls during the call
         collected = call_data.get("collected_dynamic_variables") or {}
         customer_name_extracted = (collected.get("customer_name") or "").strip()
         order_items = (collected.get("order_items_summary") or "").strip() or None
@@ -720,6 +798,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         reservation_date = (collected.get("reservation_date") or "").strip() or None
         party_size = (collected.get("party_size") or "").strip() or None
         
+        # Check if we already created a CallLog row (e.g., initialized during trade logging)
         existing_log = await get_call_log_by_call_id(db, call_id)
         if not existing_log:
             caller = await get_caller_by_phone(db, from_number)
@@ -732,6 +811,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 call_status="ended",
             )
             
+        # Compile standard update payload fields
         update_data = {
             "call_status": "ended",
             "duration_ms": call_data.get("duration_ms"),
@@ -756,24 +836,26 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if party_size:
             update_data["party_size"] = party_size
 
+        # Commit call log updates
         await update_call_log(db, call_id, **update_data)
 
+        # Upsert Caller info details
         if customer_name_extracted and from_number:
             await upsert_caller(db, from_number, customer_name_extracted)
 
-        # ── Auto-submit order to Clover when items were collected during the call ──
-        # Check whether an order was already created for this call.
+        # check if an order record was already generated (e.g. by tool confirm calls)
         recent_order = await get_order_by_call_id(db, call_id)
         if not recent_order and from_number:
+            # Fallback: check if we have a matching order submitted in the last hour
             recent_order = await get_recent_order_for_caller(db, from_number, minutes=60)
             if recent_order:
                 await update_order(db, recent_order.order_id, call_id=call_id)
 
         if recent_order:
-            # Order already exists (e.g. created by AI tool call) — just flag it
+            # Order booked - simply flag call log order_booked state
             await update_call_log(db, call_id, order_booked=True)
         elif order_items:
-            # No existing order — auto-extract items and push to POS
+            # No order linked yet, but we have items listed! Trigger auto-extractor NLP parse
             import logging as _logging
             from src.services import clover_service
             from src.utils.db_functions import update_order_clover_status
@@ -790,6 +872,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
             phone = from_number or ""
 
             if structured:
+                # We have parsed matching products, build formal order!
                 total = sum(i["price"] * i["quantity"] for i in structured)
                 auto_order = await create_order(
                     db,
@@ -808,7 +891,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     call_id, len(structured), total,
                 )
 
-                # Push to Clover POS if configured
+                # Push immediately to Clover POS if config is configured
                 if os.getenv("CLOVER_API_TOKEN") and os.getenv("CLOVER_MERCHANT_ID"):
                     try:
                         clover_result = await clover_service.push_order_to_clover(
@@ -827,13 +910,14 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                         _auto_logger.error("Auto-order Clover push failed for %s: %s", call_id, exc)
                         await update_order_clover_status(db, auto_order.order_id, None, False, str(exc))
             else:
-                # Items text exists but none matched the menu — save as a draft
-                # order so staff can review. Mark order_booked so it surfaces in the UI.
+                # No database products matched. Save call log order_booked flag so it surfaces in dashboard
+                # drafts for staff to manually resolve.
                 _auto_logger.warning(
                     "Auto-order: no menu items matched for call %s — saving draft", call_id
                 )
                 await update_call_log(db, call_id, order_booked=True)
             
+    # ==================== CASE B: CALL ANALYZED ====================
     elif event_type == "call_analyzed":
         analysis = call_data.get("call_analysis")
         if not isinstance(analysis, dict):
@@ -841,8 +925,10 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         custom = analysis.get("custom_analysis_data")
         if not isinstance(custom, dict):
             custom = {}
+            
         call_reason = (custom.get("call_reason") or "").strip() or None
         
+        # Get existing call log state
         existing_log = await get_call_log_by_call_id(db, call_id)
         already_booked = False
         existing_call_reason = None
@@ -853,8 +939,9 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         call_reason = call_reason or existing_call_reason
         is_order_booked = already_booked or bool(custom.get("order_booked", False))
         
+        # Verify success indicators from Retell
         raw_success = custom.get("call_successful")
-        is_success = None  # None = Retell did not provide this field
+        is_success = None
         if isinstance(raw_success, str):
             is_success = raw_success.strip().lower() in ("true", "1", "yes")
         elif isinstance(raw_success, bool):
@@ -863,10 +950,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if is_order_booked:
             is_success = True
 
-        # If Retell's custom flow does not set call_successful (Mitchell's has no custom
-        # analysis variables configured), infer it from user_sentiment:
-        #   Positive / Neutral   -> call was successful (info given / inquiry handled)
-        #   Negative / Frustrated -> call was not successful
+        # Fallback success evaluator (infer from call log user sentiment values)
         if is_success is None:
             sentiment = (analysis.get("user_sentiment") or "").strip().lower()
             if sentiment in ("positive", "neutral"):
@@ -878,7 +962,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if not from_number and existing_log:
             from_number = existing_log.caller_phone
 
-        # Link order if one was created recently (e.g. via webhook/tool) but not linked
+        # Link order if one was created recently but not linked
         recent_order = await get_order_by_call_id(db, call_id)
         if not recent_order and from_number:
             recent_order = await get_recent_order_for_caller(db, from_number, minutes=60)
@@ -887,9 +971,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 is_order_booked = True
                 is_success = True
 
-        # Auto-detect orders/inquiries from the call summary when no tool call fired.
-        # If the summary mentions that a trade/export inquiry was logged or an order was
-        # placed, mark order_booked=True.
+        # Scan text summary for specific keywords to infer booking if flag was missed
         _SUMMARY_ORDER_KEYWORDS = [
             "placed an order", "place a business order",
             "logged the trade inquiry", "logged the export inquiry",
@@ -906,17 +988,16 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
             is_order_booked = True
             is_success = True
 
-        # If order is booked, but there is no formal Order record in the DB, try to extract items and place it.
+        # Auto-extract and create order if flagged as booked but order doesn't exist
         if is_order_booked and not recent_order:
             order_items_collected = existing_log.order_items if existing_log else None
-            # Extract structured menu items
             structured = await auto_extract_order_items(
                 db,
                 order_items_text=order_items_collected or "",
                 call_summary_text=analysis.get("call_summary") or "",
             )
             if structured:
-                # We have valid menu items! Let's auto-create the order
+                # Create order from extracted list
                 customer_name_extracted = (custom.get("customer_name") or "").strip()
                 if not customer_name_extracted and existing_log:
                     customer_name_extracted = existing_log.customer_name_extracted or existing_log.customer_name
@@ -965,10 +1046,9 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                         _auto_logger.error("Auto-order Clover push failed on call_analyzed for %s: %s", call_id, exc)
                         await update_order_clover_status(db, auto_order.order_id, None, False, str(exc))
 
-                # Since order is successfully created/synced, set recent_order so we know it's not a fallback/draft
                 recent_order = auto_order
 
-        # Now update the call log with the final details
+        # 3. Update Call Log record with summary details
         if is_order_booked and not recent_order:
             # Fallback/draft case (B2B inquiries or no matching menu items)
             if "export" in call_summary_text:

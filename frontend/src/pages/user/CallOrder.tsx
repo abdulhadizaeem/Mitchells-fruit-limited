@@ -750,7 +750,7 @@ function DetailPanel({
                     <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".68rem", color: C.textMuted, margin: "0 0 3px" }}>
                       Type:{" "}
                       <span style={{ color: C.text, fontWeight: 700, textTransform: "capitalize" }}>
-                        {call.order_details.order_type}
+                        {call.order_details.order_type === "pickup" ? "Distributor Pickup" : call.order_details.order_type === "delivery" ? "Wholesale Delivery" : call.order_details.order_type}
                       </span>
                     </p>
                   )}
@@ -931,7 +931,7 @@ function DetailPanel({
                     <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".68rem", color: C.textMuted, margin: "0 0 3px" }}>
                       Type:{" "}
                       <span style={{ color: C.text, fontWeight: 700, textTransform: "capitalize" }}>
-                        {call.order_type}
+                        {call.order_type === "pickup" ? "Distributor Pickup" : call.order_type === "delivery" ? "Wholesale Delivery" : call.order_type}
                       </span>
                     </p>
                   )}
@@ -979,8 +979,8 @@ function DetailPanel({
                     <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 11 }}>
                       {extractedItems.map((item, i) => (
                         <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                          <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 800, color: C.gold, width: 24, flexShrink: 0 }}>
-                            {item.quantity}×
+                          <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 800, color: C.gold, width: 48, flexShrink: 0 }}>
+                            {item.quantity} kg
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".75rem", fontWeight: 700, color: C.text, margin: 0, lineHeight: 1.35 }}>
@@ -1425,7 +1425,7 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }: ReviewOrderMo
                       transition: "all .15s"
                     }}
                   >
-                    {type === "pickup" ? "Pickup 🛍️" : type === "delivery" ? "Delivery 🚚" : type}
+                    {type === "pickup" ? "Distributor Pickup 🛍️" : type === "delivery" ? "Wholesale Delivery 🚚" : type}
                   </button>
                 ))}
               </div>
@@ -1450,35 +1450,42 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }: ReviewOrderMo
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
             <h3 style={{ fontFamily: "Sora, sans-serif", fontSize: "0.8rem", fontWeight: 800, color: C.text, margin: "0 0 10px 0" }}>Add Order Items</h3>
             
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ flex: 1, position: "relative" }}>
-                <select
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  style={{ width: "100%", fontFamily: "Sora, sans-serif", fontSize: "0.78rem", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, appearance: "none" }}
-                >
-                  <option value="">-- Select a product --</option>
-                  {menuItems.map((item) => (
-                    <option key={item.id} value={item.name}>
-                      {item.name} (${item.price.toFixed(2)})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={12} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontFamily: "Sora, sans-serif", fontSize: "0.7rem", fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Select Product</label>
+                <div style={{ position: "relative" }}>
+                  <select
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    style={{ width: "100%", fontFamily: "Sora, sans-serif", fontSize: "0.78rem", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, appearance: "none" }}
+                  >
+                    <option value="">-- Select a product --</option>
+                    {menuItems.map((item) => (
+                      <option key={item.id} value={item.name}>
+                        {item.name} (${item.price.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
+                </div>
               </div>
-              <input
-                type="number"
-                min={1}
-                value={newItemQty}
-                onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value) || 1))}
-                style={{ width: 68, textAlign: "center", fontFamily: "Sora, sans-serif", fontSize: "0.78rem", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 6px", color: C.text }}
-              />
+              <div>
+                <label style={{ display: "block", fontFamily: "Sora, sans-serif", fontSize: "0.7rem", fontWeight: 700, color: C.textSub, marginBottom: 5 }}>Kilograms (kg)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={newItemQty}
+                  onChange={(e) => setNewItemQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{ width: 100, textAlign: "center", fontFamily: "Sora, sans-serif", fontSize: "0.78rem", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 6px", color: C.text }}
+                />
+              </div>
               <button
                 type="button"
                 onClick={handleAddItem}
                 disabled={!newItemName}
                 style={{
                   display: "flex", alignItems: "center", gap: 4,
+                  height: "36px",
                   fontFamily: "Sora, sans-serif", fontSize: "0.73rem", fontWeight: 700,
                   padding: "8px 16px", borderRadius: 8, border: "none",
                   background: newItemName ? C.purple : C.inputBg,
@@ -1504,7 +1511,7 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }: ReviewOrderMo
               <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.card }}>
                 <div style={{ padding: "10px 14px", background: "#FAFBFD", borderBottom: `1px solid ${C.border}`, display: "grid", gridTemplateColumns: "1fr 70px 70px 70px 30px", alignItems: "center", gap: 8 }}>
                   <span style={{ fontFamily: "Sora, sans-serif", fontSize: "0.64rem", fontWeight: 700, color: C.textMuted }}>Item Name</span>
-                  <span style={{ fontFamily: "Sora, sans-serif", fontSize: "0.64rem", fontWeight: 700, color: C.textMuted, textAlign: "center" }}>Qty</span>
+                  <span style={{ fontFamily: "Sora, sans-serif", fontSize: "0.64rem", fontWeight: 700, color: C.textMuted, textAlign: "center" }}>Kg</span>
                   <span style={{ fontFamily: "Sora, sans-serif", fontSize: "0.64rem", fontWeight: 700, color: C.textMuted, textAlign: "right" }}>Price</span>
                   <span style={{ fontFamily: "Sora, sans-serif", fontSize: "0.64rem", fontWeight: 700, color: C.textMuted, textAlign: "right" }}>Total</span>
                   <span />
