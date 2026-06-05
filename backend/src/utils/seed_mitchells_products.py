@@ -201,6 +201,10 @@ PRODUCT_CATALOG = {
 }
 
 async def seed():
+    from src.utils.db import init_db
+    print("Initializing database tables...")
+    await init_db()
+    
     async with AsyncSessionLocal() as db:
         print("Clearing existing menu items and categories...")
         # Wiping old data first to avoid mix-ups

@@ -7,6 +7,7 @@ import os
 import hashlib
 import hmac
 
+# pyrefly: ignore [missing-import]
 import httpx
 from src.utils.db import Caller
 
@@ -19,11 +20,11 @@ BASE_URL = "https://api.retellai.com"
 # on what variables it can reference (e.g. caller name, menus, open settings).
 LOCKED_PROMPT_TAIL = (
     "\n\nDYNAMIC VARIABLES AVAILABLE (do not edit this section):\n"
-    "- {{customer_name}} — caller's saved name, or empty string if new\n"
-    "- {{is_returning_customer}} — 'true' if caller has called before, 'false' if new\n"
-    "- {{customer_phone}} — caller's phone number in E.164 format\n"
-    "- {{kitchen_is_open}} — 'true' if the warehouse/fulfillment operations are currently open and accepting sales orders, 'false' if not\n"
-    "- {{store_is_open}} — 'true' if the corporate/sales offices are currently open, 'false' if closed\n"
+    "- {{customer_name}} — caller's (distributor or buyer) saved name, or empty string if new\n"
+    "- {{is_returning_customer}} — 'true' if caller (distributor or buyer) has called before, 'false' if new\n"
+    "- {{customer_phone}} — caller's (distributor or buyer) phone number in E.164 format\n"
+    "- {{kitchen_is_open}} — 'true' if the Mitchell's warehouse/fulfillment center is currently open and accepting orders, 'false' if not\n"
+    "- {{store_is_open}} — 'true' if the Mitchell's corporate/sales offices are currently open, 'false' if closed\n"
     "- {{menu}} — the complete catalog of Mitchell's products (jams, squashes, ketchups, confectionery, etc.) with available stock, pricing, and active deals. This is your ONLY source of truth for product availability and pricing. Never reference products not listed in {{menu}}.\n"
     "- {{restaurant_info}} — general information about Mitchell's Fruit Farms, its history, specialties, and policies."
 )
