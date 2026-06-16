@@ -115,22 +115,7 @@ async def get_settings(
     _: User = Depends(get_current_user),
 ):
     settings = await get_agent_settings(db)
-    retell_live = None
-    try:
-        retell_live = await retell_service.get_agent()
-        if retell_live is not None:
-            settings = await update_agent_settings(
-                db,
-                voice_id=retell_live.get("voice_id", settings.voice_id),
-                voice_speed=retell_live.get("voice_speed", settings.voice_speed),
-                interruption_sensitivity=retell_live.get("interruption_sensitivity", settings.interruption_sensitivity),
-                responsiveness=retell_live.get("responsiveness", settings.responsiveness),
-            )
-    except Exception as e:
-        logger.error("Failed to fetch live settings from Retell: %s", e)
-
     response = AgentSettingsResponse.model_validate(settings)
-    response.retell_live = retell_live
     return response
 
 

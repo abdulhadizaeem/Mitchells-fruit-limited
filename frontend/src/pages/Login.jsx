@@ -172,14 +172,14 @@ function SignIn() {
     }}
   >
               <MitchellsLogo height={32} color="#ffffff" />
-              <span style={{
+              {/* <span style={{
     fontSize: "1.38rem",
     fontWeight: 800,
     letterSpacing: "-.03em",
     background: "linear-gradient(135deg,#fff 30%,#A9A4F0 100%)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent"
-  }}>Mitchell's</span>
+  }}>Mitchell's</span> */}
             </div>
 
             {
