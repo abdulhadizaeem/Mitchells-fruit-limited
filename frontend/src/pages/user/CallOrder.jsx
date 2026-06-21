@@ -65,10 +65,14 @@ function formatDuration(ms) {
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 function formatTimestamp(ts) {
-  const d = new Date(ts);
+  let val = Number(ts) || Date.now();
+  if (val && val < 1000000000000) {
+    val = val * 1000;
+  }
+  const d = new Date(val);
   return {
     time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
-    date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   };
 }
 function getDisplayName(c) {
@@ -103,6 +107,9 @@ const SENTIMENT_MAP = {
   frustrated: { label: "Frustrated", color: C.red, bg: C.redBg, border: C.redBdr, emoji: "\u{1F621}" }
 };
 function getSentiment(c) {
+  if (c.call_reason && c.call_reason.toLowerCase().includes("complaint")) {
+    return SENTIMENT_MAP.frustrated;
+  }
   if (hasOrder(c)) {
     return SENTIMENT_MAP.positive;
   }
@@ -113,10 +120,19 @@ function getOutcome(c) {
   if (c.call_status === "ongoing")
     return { label: "Live", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
   if (hasOrder(c))
-    return { label: "Order Placed", color: C.green, bg: C.greenBg, border: C.greenBdr };
+    return { label: "Ordered", color: C.green, bg: C.greenBg, border: C.greenBdr };
+  const reason = c.call_reason?.toLowerCase() || "";
+  if (reason.includes("complaint"))
+    return { label: "Complaint", color: C.red, bg: C.redBg, border: C.redBdr };
+  if (reason.includes("callback"))
+    return { label: "Callback", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
+  if (reason.includes("trade") || reason.includes("export"))
+    return { label: "Inquiry", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
+  if (c.call_successful === false)
+    return { label: "Missed / Failed", color: C.red, bg: C.redBg, border: C.redBdr };
   if (c.call_successful === true)
     return { label: "Info Given", color: C.gold, bg: C.goldBg, border: C.goldBdr };
-  return { label: "Missed / Failed", color: C.red, bg: C.redBg, border: C.redBdr };
+  return { label: "Info Given", color: C.gold, bg: C.goldBg, border: C.goldBdr };
 }
 function AudioPlayer({ url, duration }) {
   const audioRef = useRef(null);
@@ -1548,6 +1564,7 @@ function CallsOrders() {
     else setRefreshing(true);
     try {
       const data = await getCallsApi(0, 1e4);
+      console.log("[CallOrder] Fetched calls:", data?.length, data?.[0]);
       setCalls(data);
       setSelected((prev) => {
         if (prev) {
@@ -1556,7 +1573,8 @@ function CallsOrders() {
         }
         return data[0] ?? null;
       });
-    } catch {
+    } catch (err) {
+      console.error("[CallOrder] fetchCalls error:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -1608,7 +1626,9 @@ function CallsOrders() {
   })();
   const filtered = calls.filter((c) => {
     if (dateFilter !== "all") {
-      const callTime = c.start_timestamp;
+      let callTime = Number(c.start_timestamp);
+      if (callTime && callTime < 1000000000000) callTime *= 1000;
+      if (!callTime) callTime = Date.now();
       const orderTime = c.order_details?.created_at ? new Date(c.order_details.created_at).getTime() : 0;
       if (Math.max(callTime, orderTime) < cutoffMs) return false;
     }
@@ -1617,9 +1637,16 @@ function CallsOrders() {
       const ok = (c.caller_phone ?? "").includes(q) || getDisplayName(c).toLowerCase().includes(q) || (c.call_summary ?? "").toLowerCase().includes(q) || String(c.order_details?.order_id ?? "").toLowerCase().includes(q);
       if (!ok) return false;
     }
-    if (outcomeFilter === "ordered" && !hasOrder(c)) return false;
-    if (outcomeFilter === "info" && (hasOrder(c) || !c.call_successful)) return false;
-    if (outcomeFilter === "missed" && c.call_successful !== false) return false;
+    // Outcome filter
+    const outcome = getOutcome(c).label.toLowerCase();
+    if (outcomeFilter !== "all") {
+      if (outcomeFilter === "ordered" && outcome !== "ordered") return false;
+      if (outcomeFilter === "info" && outcome !== "info given") return false;
+      if (outcomeFilter === "missed" && outcome !== "missed / failed") return false;
+      if (outcomeFilter === "complaint" && outcome !== "complaint") return false;
+      if (outcomeFilter === "inquiry" && outcome !== "inquiry") return false;
+      if (outcomeFilter === "callback" && outcome !== "callback") return false;
+    }
     if (sentimentFilter !== "all") {
       const isPositive = hasOrder(c) || (c.user_sentiment ?? "").toLowerCase() === "positive";
       const isNeutral = !hasOrder(c) && (c.user_sentiment ?? "").toLowerCase() === "neutral";
@@ -1639,7 +1666,11 @@ function CallsOrders() {
   };
   const sorted = [...filtered].sort((a, b) => {
     let cmp = 0;
-    if (sortField === "timestamp") cmp = a.start_timestamp - b.start_timestamp;
+    if (sortField === "timestamp") {
+      let aTime = Number(a.start_timestamp) || Date.now();
+      let bTime = Number(b.start_timestamp) || Date.now();
+      cmp = aTime - bTime;
+    }
     if (sortField === "duration") cmp = (a.duration_ms ?? 0) - (b.duration_ms ?? 0);
     if (sortField === "revenue") {
       const ra = getOrderRevenue(a) ?? -1;
@@ -1895,10 +1926,10 @@ function CallsOrders() {
 
             
             <span style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: C.textGhost, fontFamily: "'Sora',sans-serif", marginRight: 2 }}>Outcome</span>
-            {["all", "ordered", "info", "missed"].map((o) => {
+            {["all", "ordered", "info", "complaint", "inquiry", "callback", "missed"].map((o) => {
     const active = outcomeFilter === o;
-    const label = o === "all" ? "All" : o === "ordered" ? "Ordered" : o === "info" ? "Info" : "Missed";
-    const dot = o === "ordered" ? C.green : o === "info" ? C.gold : o === "missed" ? C.red : C.textMuted;
+    const label = o === "all" ? "All" : o === "ordered" ? "Ordered" : o === "info" ? "Info" : o === "complaint" ? "Complaint" : o === "inquiry" ? "Inquiry" : o === "callback" ? "Callback" : "Missed";
+    const dot = o === "ordered" ? C.green : o === "info" ? C.gold : o === "missed" ? C.red : o === "complaint" ? C.red : o === "inquiry" ? C.purple : o === "callback" ? C.purple : C.textMuted;
     return <button
       key={o}
       className="co-chip"

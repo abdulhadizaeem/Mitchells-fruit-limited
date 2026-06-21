@@ -17,6 +17,7 @@ import Settings from "./pages/user/Settings";
 import { Toaster } from "react-hot-toast";
 import Report from "./pages/user/Report";
 import Agents from "./pages/user/Agents";
+import Complaints from "./pages/user/Complaints";
 function PrivateRoute() {
   const token = localStorage.getItem("token");
   return token ? <Outlet /> : <Navigate to="/signin" replace />;
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
           { index: true, element: <Overview /> },
           { path: "agents", element: <Agents /> },
           { path: "calls", element: <CallsOrders /> },
+          { path: "complaints", element: <Complaints /> },
           { path: "menu", element: <Menu /> },
           { path: "settings", element: <Settings /> },
           { path: "report", element: <Report /> }

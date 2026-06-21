@@ -131,6 +131,10 @@ const createAgentApi = async (data) => {
   const res = await axiosInstance.post("/settings/agents", data);
   return res.data;
 };
+const getComplaintsApi = async () => {
+  const res = await axiosInstance.get("/retell/complaints");
+  return res.data;
+};
 export {
   activatePromptApi,
   cancelOrderApi,
@@ -149,6 +153,7 @@ export {
   getAgentsApi,
   getCallsApi,
   getCategoriesApi,
+  getComplaintsApi,
   getDashboardStatsApi,
   getItemsByCategoryApi,
   getMenuPreviewApi,

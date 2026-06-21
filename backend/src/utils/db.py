@@ -303,6 +303,7 @@ class Complaint(Base):
     batch_lot_number: Mapped[str | None] = mapped_column(String, nullable=True)
     purchase_date: Mapped[str | None] = mapped_column(String, nullable=True)
     severity: Mapped[str | None] = mapped_column(String, nullable=True)
+    po_number: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
@@ -335,40 +336,36 @@ from sqlalchemy import text
 
 
 # 5. DDL MIGRATION UTILITIES
-async def _run_migration(sql: str) -> None:
-    """
-    Executes a single raw DDL SQL query statement.
-    Wraps it in its own connection transaction block so that failures are isolated.
-    """
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text(sql))
-    except Exception:
-        # Ignore issues (e.g. if column already exists)
-        pass
-
-
 async def init_db():
     """
     Creates all physical tables in PostgreSQL if they do not exist,
     and runs specific manual schema migration steps.
     """
-    # 1. Create tables from SQLAlchemy registry
+    # 1. Create tables and run migrations in a single connection transaction block
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # 2. Sequential migrations list to adapt production DB without complex migration scripts (like Alembic)
-    migrations = [
-        "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS restaurant_info VARCHAR DEFAULT 'We are open daily from 11am to 10pm.'",
-        "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS wait_time_pickup VARCHAR DEFAULT '15'",
-        "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS wait_time_delivery VARCHAR DEFAULT '30'",
-        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_order_id VARCHAR",
-        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_synced BOOLEAN DEFAULT FALSE",
-        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_error TEXT",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS clover_item_id VARCHAR",
-        "UPDATE agent_settings SET restaurant_name = 'Mitchell''s Fruit Farms' WHERE restaurant_name = 'our restaurant' OR restaurant_name = 'Your Restaurant' OR restaurant_name IS NULL",
-        "UPDATE agent_settings SET restaurant_info = 'Mitchell''s is a historic food manufacturer in Pakistan, producing high-quality jams, squashes, ketchups, sauces, and confectionery since 1933.' WHERE restaurant_info = 'We are open daily from 11am to 10pm.' OR restaurant_info IS NULL",
-    ]
-    for sql in migrations:
-        await _run_migration(sql)
+        # 2. Sequential migrations list to adapt production DB without complex migration scripts (like Alembic)
+        migrations = [
+            "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS restaurant_info VARCHAR DEFAULT 'We are open daily from 11am to 10pm.'",
+            "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS wait_time_pickup VARCHAR DEFAULT '15'",
+            "ALTER TABLE agent_settings ADD COLUMN IF NOT EXISTS wait_time_delivery VARCHAR DEFAULT '30'",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_order_id VARCHAR",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_synced BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS clover_error TEXT",
+            "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS clover_item_id VARCHAR",
+            "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS po_number VARCHAR",
+            "UPDATE agent_settings SET restaurant_name = 'Mitchell''s Fruit Farms' WHERE restaurant_name = 'our restaurant' OR restaurant_name = 'Your Restaurant' OR restaurant_name IS NULL",
+            "UPDATE agent_settings SET restaurant_info = 'Mitchell''s is a historic food manufacturer in Pakistan, producing high-quality jams, squashes, ketchups, sauces, and confectionery since 1933.' WHERE restaurant_info = 'We are open daily from 11am to 10pm.' OR restaurant_info IS NULL",
+        ]
+        
+        # Use nested transactions (savepoints) so if one migration fails, we can continue the rest
+        for sql in migrations:
+            try:
+                async with conn.begin_nested():
+                    await conn.execute(text(sql))
+            except Exception:
+                # Ignore issues (e.g. if column already exists)
+                pass
+
 

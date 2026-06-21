@@ -60,7 +60,9 @@ function getGreeting() {
 }
 
 function formatTime(ts, fallback) {
-  const raw = ts ?? (fallback ? new Date(fallback).getTime() : null);
+  let raw = ts != null ? Number(ts) : null;
+  if (raw != null && raw < 1000000000000) raw = raw * 1000;
+  if (!raw) raw = fallback ? new Date(fallback).getTime() : null;
   if (!raw) return "—";
   return new Date(raw).toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -236,9 +238,11 @@ export default function Overview() {
   })();
 
   const periodCalls = calls.filter((c) => {
-    const callTime = c.start_timestamp ?? new Date(c.created_at).getTime();
+    let callTime = c.start_timestamp != null ? Number(c.start_timestamp) : null;
+    if (callTime && callTime < 1000000000000) callTime = callTime * 1000;
+    if (!callTime && c.created_at) callTime = new Date(c.created_at).getTime();
     const orderTime = c.order_details?.created_at ? new Date(c.order_details.created_at).getTime() : 0;
-    return Math.max(callTime, orderTime) >= cutoffMs;
+    return Math.max(callTime || 0, orderTime) >= cutoffMs;
   });
   const aiRevenue = periodCalls.filter(hasOrder)
     .reduce((sum, c) => sum + (getOrderRevenue(c) ?? 0), 0);

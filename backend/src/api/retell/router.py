@@ -640,7 +640,7 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
         )
         
     # 4. Fetch the Retell call ID from headers to link this order
-    call_id = request.headers.get("x-retell-call-id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
     
     # 5. Create Order in local database
     order = await create_order(
@@ -1249,7 +1249,7 @@ async def log_trade_inquiry(request: Request, db: AsyncSession = Depends(get_db)
     db.add(inquiry)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
         caller_phone = data.get("caller_phone", "")
@@ -1322,7 +1322,7 @@ async def log_export_inquiry(request: Request, db: AsyncSession = Depends(get_db
     db.add(inquiry)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
         caller_phone = data.get("caller_phone", "")
@@ -1388,12 +1388,13 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
         purchase_location=data.get("purchase_location", ""),
         batch_lot_number=data.get("batch_lot_number", ""),
         purchase_date=data.get("purchase_date", ""),
-        severity=data.get("severity", "")
+        severity=data.get("severity", ""),
+        po_number=data.get("po_number", "")
     )
     db.add(complaint)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
         caller_phone = data.get("caller_phone", "")
@@ -1416,6 +1417,7 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
         batch_lot_number = data.get("batch_lot_number", "")
         purchase_date = data.get("purchase_date", "")
         severity = data.get("severity", "")
+        po_number = data.get("po_number", "")
         
         notes_parts = []
         if product_name:
@@ -1430,6 +1432,8 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
             notes_parts.append(f"Date: {purchase_date}")
         if severity:
             notes_parts.append(f"Severity: {severity}")
+        if po_number:
+            notes_parts.append(f"PO Number: {po_number}")
             
         special_notes = ", ".join(notes_parts) if notes_parts else None
         
@@ -1439,6 +1443,7 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
             call_reason=f"Complaint: {product_name}" if product_name else "Complaint",
             special_notes=special_notes,
             customer_name_extracted=caller_name or None,
+            user_sentiment="Frustrated",
         )
 
     return {"complaint_id": complaint.id, "message": "Complaint logged successfully."}
@@ -1465,7 +1470,7 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
     db.add(callback)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
         caller_phone = data.get("caller_phone", "")
@@ -1508,3 +1513,25 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
 
 
 CallLogResponse.model_rebuild()
+
+class ComplaintResponse(BaseModel):
+    id: str
+    caller_name: str
+    caller_phone: str
+    product_name: str
+    complaint_description: str
+    purchase_location: str | None = None
+    batch_lot_number: str | None = None
+    purchase_date: str | None = None
+    severity: str | None = None
+    po_number: str | None = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+@router.get("/complaints", response_model=list[ComplaintResponse])
+async def get_complaints(db: AsyncSession = Depends(get_db)):
+    from src.utils.db import Complaint
+    result = await db.execute(select(Complaint).order_by(Complaint.created_at.desc()))
+    return result.scalars().all()

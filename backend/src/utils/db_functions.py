@@ -202,15 +202,16 @@ async def list_call_logs(
         select(CallLog)
         .options(selectinload(CallLog.order_details))
         .order_by(CallLog.created_at.desc())
-        .offset(skip)
-        .limit(limit)
     )
     # Conditionally add filter requirements to the SQL query statement
     if status_filter is not None:
         query = query.where(CallLog.call_status == status_filter)
     if order_booked_filter is not None:
         query = query.where(CallLog.order_booked == order_booked_filter)
-        
+
+    # Apply pagination AFTER filters so it operates on the filtered set
+    query = query.offset(skip).limit(limit)
+
     result = await db.execute(query)
     # Return a clean list of row models
     return list(result.scalars().all())

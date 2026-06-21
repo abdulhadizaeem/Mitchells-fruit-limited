@@ -15,7 +15,8 @@ import {
   Pause,
   Play,
   ShoppingBag,
-  Bot
+  Bot,
+  AlertCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
@@ -105,6 +106,7 @@ const NAV_ITEMS = [
   { icon: <ChartNoAxesColumnIncreasing size={16} />, label: "Overview", to: "/dashboard", end: true },
   { icon: <Bot size={16} />, label: "Agents", to: "/dashboard/agents" },
   { icon: <PhoneCall size={16} />, label: "Calls & Orders", to: "/dashboard/calls" },
+  { icon: <AlertCircle size={16} />, label: "Complaints", to: "/dashboard/complaints" },
   { icon: <SquareMenu size={16} />, label: "Products", to: "/dashboard/menu" },
   { icon: <ChartBarIncreasing size={16} />, label: "Reports", to: "/dashboard/report" },
   { icon: <Settings size={16} />, label: "Settings", to: "/dashboard/settings" }
