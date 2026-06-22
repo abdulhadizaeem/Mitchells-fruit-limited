@@ -20,6 +20,9 @@ REPO_URL="https://github.com/abdulhadizaeem/Mitchells-fruit-limited.git"
 BRANCH="dev"
 APP_DIR="${APP_DIR:-/opt/mitchells-fruit-limited}"
 APP_USER="${APP_USER:-www-data}"
+APP_HOME="${APP_HOME:-$APP_DIR}"
+NPM_CACHE="${NPM_CACHE:-$APP_DIR/.npm-cache}"
+PM2_HOME="${PM2_HOME:-$APP_DIR/.pm2}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 SERVICE_NAME="${SERVICE_NAME:-mitchells-backend}"
@@ -29,6 +32,14 @@ PYTHON="${PYTHON:-python3}"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 die() { log "ERROR: $*"; exit 1; }
+
+run_as_app() {
+  sudo -u "$APP_USER" env \
+    HOME="$APP_HOME" \
+    NPM_CONFIG_CACHE="$NPM_CACHE" \
+    PM2_HOME="$PM2_HOME" \
+    bash -c "$1"
+}
 
 if [[ "${EUID}" -ne 0 ]]; then
   die "Run as root: sudo $0"
@@ -54,18 +65,20 @@ else
   git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
 fi
 
-# ── Ownership ───────────────────────────────────────────────────────────────
+# ── Ownership + writable dirs for npm/pm2 ─────────────────────────────────────
+mkdir -p "$NPM_CACHE" "$PM2_HOME"
 if id "$APP_USER" &>/dev/null; then
-  chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+  usermod -d "$APP_HOME" "$APP_USER" 2>/dev/null || true
+  chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$NPM_CACHE" "$PM2_HOME"
 else
   log "User $APP_USER not found; creating ..."
-  useradd --system --home "$APP_DIR" --shell /usr/sbin/nologin "$APP_USER" || true
-  chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+  useradd --system --home "$APP_HOME" --shell /usr/sbin/nologin "$APP_USER" || true
+  chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$NPM_CACHE" "$PM2_HOME"
 fi
 
 # ── Backend: venv + dependencies ────────────────────────────────────────────
 log "Setting up backend virtualenv ..."
-sudo -u "$APP_USER" bash -c "
+run_as_app "
   set -euo pipefail
   cd '$APP_DIR/backend'
   if [[ ! -d .venv ]]; then
@@ -113,10 +126,10 @@ log "Backend: systemctl status ${SERVICE_NAME}"
 [[ -f "$APP_DIR/frontend/.env" ]] || log "WARN: $APP_DIR/frontend/.env missing — add VITE_BASE_URL before users hit the UI"
 
 log "Building frontend ..."
-sudo -u "$APP_USER" bash -c "
+run_as_app "
   set -euo pipefail
   cd '$APP_DIR/frontend'
-  npm ci
+  npm ci --cache '$NPM_CACHE'
   npm run build
 "
 
@@ -143,8 +156,7 @@ chown "$APP_USER:$APP_USER" "$ECOSYSTEM"
 
 log "Starting frontend with PM2 ($PM2_APP_NAME) ..."
 
-# PM2 as app user (keeps process list in that user's home)
-sudo -u "$APP_USER" bash -c "
+run_as_app "
   set -euo pipefail
   cd '$APP_DIR/frontend'
   pm2 delete '${PM2_APP_NAME}' 2>/dev/null || true
@@ -152,12 +164,11 @@ sudo -u "$APP_USER" bash -c "
   pm2 save
 "
 
-# PM2 startup on boot (run once; may print a command to copy)
-sudo -u "$APP_USER" pm2 startup systemd -u "$APP_USER" --hp "$(eval echo ~$APP_USER)" 2>/dev/null || \
-  log "If PM2 does not start on reboot, run: sudo -u $APP_USER pm2 startup"
+run_as_app "pm2 startup systemd -u '$APP_USER' --hp '$APP_HOME'" 2>/dev/null || \
+  log "If PM2 does not start on reboot, run: sudo -u $APP_USER env HOME=$APP_HOME PM2_HOME=$PM2_HOME pm2 startup"
 
 log "Done."
 log "  Backend:  http://0.0.0.0:${BACKEND_PORT}  (systemd: ${SERVICE_NAME})"
 log "  Frontend: http://0.0.0.0:${FRONTEND_PORT}  (pm2: ${PM2_APP_NAME})"
 log "  Logs:     journalctl -u ${SERVICE_NAME} -f"
-log "            sudo -u ${APP_USER} pm2 logs ${PM2_APP_NAME}"
+log "            sudo -u ${APP_USER} env HOME=${APP_HOME} PM2_HOME=${PM2_HOME} pm2 logs ${PM2_APP_NAME}"

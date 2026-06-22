@@ -39,6 +39,22 @@ sudo ./deploy/deploy.sh
 sudo /opt/mitchells-fruit-limited/deploy/deploy.sh
 ```
 
+## npm EACCES on `/var/www`
+
+`www-data` often cannot write to `/var/www`. The deploy script now uses:
+
+- `HOME` → app directory (default `/opt/mitchells-fruit-limited`)
+- npm cache → `$APP_DIR/.npm-cache`
+- PM2 home → `$APP_DIR/.pm2`
+
+If you hit this before updating the script, run once:
+
+```bash
+sudo mkdir -p /opt/mitchells-fruit-limited/.npm-cache /opt/mitchells-fruit-limited/.pm2
+sudo chown -R www-data:www-data /opt/mitchells-fruit-limited
+sudo -u www-data env HOME=/opt/mitchells-fruit-limited NPM_CONFIG_CACHE=/opt/mitchells-fruit-limited/.npm-cache bash -c 'cd /opt/mitchells-fruit-limited/frontend && npm ci && npm run build'
+```
+
 ## Useful commands
 
 ```bash
