@@ -61,10 +61,11 @@ log "Branch: $BRANCH"
 
 # ── Clone or pull ───────────────────────────────────────────────────────────
 if [[ -d "$APP_DIR/.git" ]]; then
-  log "Pulling latest from origin/$BRANCH ..."
+  log "Syncing to origin/$BRANCH (discards local server edits) ..."
   git_safe -C "$APP_DIR" fetch origin "$BRANCH"
   git_safe -C "$APP_DIR" checkout "$BRANCH"
-  git_safe -C "$APP_DIR" pull origin "$BRANCH"
+  git_safe -C "$APP_DIR" reset --hard "origin/$BRANCH"
+  git_safe -C "$APP_DIR" clean -fd
 else
   log "Cloning repository ..."
   mkdir -p "$(dirname "$APP_DIR")"
