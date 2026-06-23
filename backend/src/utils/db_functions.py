@@ -95,12 +95,38 @@ async def update_password(db: AsyncSession, user_id: str, hashed_password: str) 
 
 # 2. CALLER & CUSTOMER HISTORY QUERIES
 
+def normalize_phone_number(phone: str) -> str:
+    """
+    Helper to normalize phone numbers by extracting digits only
+    and returning the last 10 characters to bypass formatting mismatches.
+    """
+    if not phone:
+        return ""
+    digits = "".join(c for c in phone if c.isdigit())
+    return digits[-10:] if len(digits) >= 10 else digits
+
+
 async def get_caller_by_phone(db: AsyncSession, phone_number: str) -> Caller | None:
     """
     Retrieves Caller contact records using their E.164 phone number.
+    Supports robust fallback matching by normalized phone suffix.
     """
+    if not phone_number:
+        return None
+    # 1. First attempt exact match
     result = await db.execute(select(Caller).where(Caller.phone_number == phone_number))
-    return result.scalar_one_or_none()
+    caller = result.scalar_one_or_none()
+    if caller:
+        return caller
+
+    # 2. Robust fallback matching by last 10 digits
+    norm = normalize_phone_number(phone_number)
+    if len(norm) >= 10:
+        result = await db.execute(
+            select(Caller).where(Caller.phone_number.like(f"%{norm}"))
+        )
+        return result.scalars().first()
+    return None
 
 
 async def upsert_caller(db: AsyncSession, phone_number: str, customer_name: str | None) -> Caller:

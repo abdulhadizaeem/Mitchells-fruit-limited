@@ -109,7 +109,7 @@ def parse_csv_contacts(content: str) -> list[dict]:
 
     name_key = col("owner_name", "name")
     company_key = col("shop_name", "company")
-    email_key = col("email")
+    language_key = col("language_preference", "language_pref", "language")
     city_key = col("customer_city", "city")
     last_order_key = col("last_order")
     type_key = col("customer_type")
@@ -129,7 +129,7 @@ def parse_csv_contacts(content: str) -> list[dict]:
         contacts.append({
             "name": (row.get(name_key) or "").strip() or None if name_key else None,
             "phone_number": phone,
-            "email": (row.get(email_key) or "").strip() or None if email_key else None,
+            "language_preference": (row.get(language_key) or "").strip() or "Urdu" if language_key else "Urdu",
             "company": (row.get(company_key) or "").strip() or None if company_key else None,
             "metadata": meta or None,
             "shop_name": (row.get(company_key) or "").strip() or None if company_key else None,
@@ -157,7 +157,7 @@ def parse_json_contacts(content: str) -> list[dict]:
         contacts.append({
             "name": item.get("owner_name") or item.get("name"),
             "phone_number": phone,
-            "email": item.get("email"),
+            "language_preference": item.get("language_preference") or item.get("language") or "Urdu",
             "company": item.get("shop_name") or item.get("company"),
             "metadata": item.get("metadata"),
             "shop_name": item.get("shop_name"),

@@ -789,6 +789,8 @@ async def _enrich_call_logs_with_caller_names(
     db: AsyncSession,
     logs: list,
 ) -> list[CallLogResponse]:
+    from src.utils.db_functions import normalize_phone_number
+
     phones = {
         log.caller_phone
         for log in logs
@@ -797,12 +799,23 @@ async def _enrich_call_logs_with_caller_names(
     }
     caller_names: dict[str, str] = {}
     if phones:
-        result = await db.execute(
-            select(Caller).where(Caller.phone_number.in_(phones))
-        )
-        for caller in result.scalars().all():
-            if caller.customer_name:
-                caller_names[caller.phone_number] = caller.customer_name
+        result = await db.execute(select(Caller))
+        all_callers = result.scalars().all()
+        
+        # Map normalized phone -> name
+        normalized_caller_map = {}
+        for c in all_callers:
+            if c.customer_name:
+                norm_p = normalize_phone_number(c.phone_number)
+                if norm_p:
+                    normalized_caller_map[norm_p] = c.customer_name
+                    
+        for log_phone in phones:
+            norm_log_p = normalize_phone_number(log_phone)
+            name = normalized_caller_map.get(norm_log_p)
+            if name:
+                caller_names[log_phone] = name
+
     responses = []
     for log in logs:
         resp = CallLogResponse.model_validate(log)

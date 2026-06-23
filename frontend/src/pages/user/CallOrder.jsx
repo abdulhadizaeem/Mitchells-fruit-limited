@@ -1629,12 +1629,10 @@ function CallsOrders() {
       if (outcomeFilter === "callback" && outcome !== "callback") return false;
     }
     if (sentimentFilter !== "all") {
-      const isPositive = hasOrder(c) || (c.user_sentiment ?? "").toLowerCase() === "positive";
-      const isNeutral = !hasOrder(c) && (c.user_sentiment ?? "").toLowerCase() === "neutral";
-      const isNegative = !hasOrder(c) && ["negative", "frustrated"].includes((c.user_sentiment ?? "").toLowerCase());
-      if (sentimentFilter === "positive" && !isPositive) return false;
-      if (sentimentFilter === "neutral" && !isNeutral) return false;
-      if (sentimentFilter === "negative" && !isNegative) return false;
+      const sentimentObj = getSentiment(c);
+      if (sentimentFilter === "positive" && sentimentObj !== SENTIMENT_MAP.positive) return false;
+      if (sentimentFilter === "neutral" && sentimentObj !== SENTIMENT_MAP.neutral) return false;
+      if (sentimentFilter === "negative" && sentimentObj !== SENTIMENT_MAP.negative && sentimentObj !== SENTIMENT_MAP.frustrated) return false;
     }
     return true;
   });

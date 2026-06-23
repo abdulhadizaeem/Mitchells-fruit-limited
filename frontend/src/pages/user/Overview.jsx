@@ -377,11 +377,11 @@ export default function Overview() {
                 border: "none",
                 cursor: aiToggling ? "not-allowed" : "pointer",
                 background: settings?.is_active
-                  ? "linear-gradient(135deg,#21c87c,#19a568)"
+                  ? "linear-gradient(135deg,#034ca1,#023168)"
                   : "linear-gradient(135deg,#e6524e,#c2403d)",
                 color: "#fff",
                 boxShadow: settings?.is_active
-                  ? "0 2px 14px rgba(15,168,98,.3), inset 0 1px 0 rgba(255,255,255,.14)"
+                  ? "0 2px 14px rgba(3,76,161,.3), inset 0 1px 0 rgba(255,255,255,.14)"
                   : "0 2px 14px rgba(217,65,64,.3), inset 0 1px 0 rgba(255,255,255,.1)",
                 animation: !settings?.is_active && !aiToggling ? "pulse 2s ease-in-out infinite" : "none",
                 transition: "opacity .2s",

@@ -23,11 +23,12 @@ def test_validate_phone_invalid():
 
 
 def test_parse_csv_contacts():
-    csv_content = "name,phone_number,email\nJohn,+14155551234,j@x.com\n"
+    csv_content = "name,phone_number,language_preference\nJohn,+14155551234,Urdu\n"
     contacts = parse_csv_contacts(csv_content)
     assert len(contacts) == 1
     assert contacts[0]["name"] == "John"
     assert contacts[0]["phone_number"] == "+14155551234"
+    assert contacts[0]["language_preference"] == "Urdu"
 
 
 def test_parse_json_contacts_list():

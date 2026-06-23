@@ -368,7 +368,7 @@ class OutboundContact(Base):
     )
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     phone_number: Mapped[str] = mapped_column(String, nullable=False)
-    email: Mapped[str | None] = mapped_column(String, nullable=True)
+    language_preference: Mapped[str] = mapped_column(String, default="Urdu", nullable=False)
     company: Mapped[str | None] = mapped_column(String, nullable=True)
     contact_metadata: Mapped[dict | None] = mapped_column(
         "metadata", JSON, nullable=True
@@ -457,6 +457,8 @@ async def init_db():
             "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS po_number VARCHAR",
             "UPDATE agent_settings SET restaurant_name = 'Mitchell''s Fruit Farms' WHERE restaurant_name = 'our restaurant' OR restaurant_name = 'Your Restaurant' OR restaurant_name IS NULL",
             "UPDATE agent_settings SET restaurant_info = 'Mitchell''s is a historic food manufacturer in Pakistan, producing high-quality jams, squashes, ketchups, sauces, and confectionery since 1933.' WHERE restaurant_info = 'We are open daily from 11am to 10pm.' OR restaurant_info IS NULL",
+            "ALTER TABLE outbound_contacts ADD COLUMN IF NOT EXISTS language_preference VARCHAR DEFAULT 'Urdu'",
+            "ALTER TABLE outbound_contacts DROP COLUMN IF EXISTS email",
         ]
         
         # Use nested transactions (savepoints) so if one migration fails, we can continue the rest

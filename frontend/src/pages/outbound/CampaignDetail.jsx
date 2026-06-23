@@ -44,11 +44,11 @@ const CSV_IMPORT_FIELDS = [
     note: "Business or shop name",
   },
   {
-    column: "email",
-    required: false,
-    aliases: null,
-    example: "ali@example.com",
-    note: "Optional email",
+    column: "language_preference",
+    required: true,
+    aliases: "language",
+    example: "Urdu",
+    note: "Required. Language for the call (e.g. Urdu, English)",
   },
   {
     column: "customer_city",
@@ -74,9 +74,9 @@ const CSV_IMPORT_FIELDS = [
 ];
 
 const CSV_SAMPLE = [
-  "phone_number,owner_name,shop_name,email,customer_city,last_order,customer_type",
-  "03475574848,Ali Khan,Fresh Mart,ali@example.com,Lahore,2x Mango Jam,existing",
-  "03001234567,Sara Ali,City Store,,Karachi,,new",
+  "phone_number,owner_name,shop_name,language_preference,customer_city,last_order,customer_type",
+  "03475574848,Ali Khan,Fresh Mart,Urdu,Lahore,2x Mango Jam,existing",
+  "03001234567,Sara Ali,City Store,English,Karachi,,new",
 ].join("\n");
 
 function downloadSampleCsv() {
@@ -108,7 +108,7 @@ export default function CampaignDetail() {
   const [form, setForm] = useState({
     name: "",
     phone_number: "",
-    email: "",
+    language_preference: "Urdu",
     company: "",
   });
 
@@ -200,7 +200,7 @@ export default function CampaignDetail() {
       await addOutboundContactApi(id, form);
       toast.success("Contact added");
       setShowAdd(false);
-      setForm({ name: "", phone_number: "", email: "", company: "" });
+      setForm({ name: "", phone_number: "", language_preference: "Urdu", company: "" });
       await fetchAll(true);
     } catch (err) {
       toast.error(apiError(err, "Failed to add contact"));
@@ -470,7 +470,7 @@ export default function CampaignDetail() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".82rem" }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}`, background: "#FAFBFD" }}>
-              {["Name", "Phone", "Email", "Company", "Status", "Actions"].map((h) => (
+              {["Name", "Phone", "Language", "Company", "Status", "Actions"].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -499,7 +499,7 @@ export default function CampaignDetail() {
                 <tr key={ct.id} style={{ borderBottom: `1px solid ${C.border}` }}>
                   <td style={{ padding: "12px 16px", fontWeight: 600 }}>{ct.name || "—"}</td>
                   <td style={{ padding: "12px 16px" }}>{ct.phone_number}</td>
-                  <td style={{ padding: "12px 16px", color: C.textMuted }}>{ct.email || "—"}</td>
+                  <td style={{ padding: "12px 16px", color: C.textMuted }}>{ct.language_preference || "Urdu"}</td>
                   <td style={{ padding: "12px 16px", color: C.textMuted }}>{ct.company || "—"}</td>
                   <td style={{ padding: "12px 16px" }}>
                     <StatusBadge status={ct.status} />
@@ -556,7 +556,7 @@ export default function CampaignDetail() {
           >
             <h3 style={{ margin: "0 0 16px", fontWeight: 800 }}>Add Contact</h3>
             <form onSubmit={addContact}>
-              {["name", "phone_number", "email", "company"].map((field) => (
+              {["name", "phone_number", "language_preference", "company"].map((field) => (
                 <input
                   key={field}
                   value={form[field]}

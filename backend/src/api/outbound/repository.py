@@ -114,7 +114,7 @@ async def create_contact(
     campaign_id: str,
     phone_number: str,
     name: str | None = None,
-    email: str | None = None,
+    language_preference: str = "Urdu",
     company: str | None = None,
     metadata: dict | None = None,
 ) -> OutboundContact:
@@ -122,7 +122,7 @@ async def create_contact(
         campaign_id=campaign_id,
         name=name,
         phone_number=phone_number,
-        email=email,
+        language_preference=language_preference,
         company=company,
         contact_metadata=metadata,
         status="pending",

@@ -62,7 +62,7 @@ class OutboundCallingService:
         campaign_id: str,
         phone_number: str,
         name: str | None = None,
-        email: str | None = None,
+        language_preference: str = "Urdu",
         company: str | None = None,
         metadata: dict | None = None,
         shop_name: str | None = None,
@@ -107,7 +107,7 @@ class OutboundCallingService:
             campaign_id,
             normalized,
             resolved_name,
-            email,
+            language_preference,
             resolved_company,
             resolved_meta,
         )
@@ -151,7 +151,7 @@ class OutboundCallingService:
                     campaign_id,
                     normalized,
                     resolved_name,
-                    item.get("email"),
+                    item.get("language_preference") or "Urdu",
                     resolved_company,
                     resolved_meta,
                 )
@@ -327,6 +327,7 @@ class OutboundCallingService:
             "last_order": last_order,
             "product_catalogue": catalogue,
             "company_info": settings.restaurant_info or "",
+            "language_preference": contact.language_preference,
         }
 
     async def _dial_contact(self, db, campaign, contact):

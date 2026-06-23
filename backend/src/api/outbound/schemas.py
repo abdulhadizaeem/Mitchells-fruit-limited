@@ -33,7 +33,7 @@ class CampaignResponse(BaseModel):
 class ContactCreate(BaseModel):
     name: str | None = None
     phone_number: str
-    email: str | None = None
+    language_preference: str = "Urdu"
     company: str | None = None
     metadata: dict | None = None
     shop_name: str | None = None
@@ -48,7 +48,7 @@ class ContactResponse(BaseModel):
     campaign_id: str
     name: str | None
     phone_number: str
-    email: str | None
+    language_preference: str
     company: str | None
     metadata: dict | None = Field(None, validation_alias="contact_metadata")
     status: str
@@ -62,7 +62,7 @@ class ContactResponse(BaseModel):
 class ContactImportItem(BaseModel):
     name: str | None = None
     phone_number: str
-    email: str | None = None
+    language_preference: str = "Urdu"
     company: str | None = None
     metadata: dict | None = None
     shop_name: str | None = None
