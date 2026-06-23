@@ -117,13 +117,13 @@ export default function CampaignDetail() {
     fetchLock.current = true;
     if (!silent) setRefreshing(true);
     try {
-      const [c, ct, st] = await Promise.all([
-        getOutboundCampaignApi(id),
-        getOutboundContactsApi(id),
-        getOutboundCampaignStatsApi(id),
-      ]);
+      const c = await getOutboundCampaignApi(id);
       setCampaign(c);
-      setContacts(ct);
+      const [ct, st] = await Promise.all([
+        getOutboundContactsApi(id).catch(() => []),
+        getOutboundCampaignStatsApi(id).catch(() => null),
+      ]);
+      setContacts(Array.isArray(ct) ? ct : []);
       setStats(st);
     } catch {
       if (!silent) toast.error("Failed to load campaign");

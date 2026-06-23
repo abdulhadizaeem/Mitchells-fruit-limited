@@ -1,5 +1,6 @@
 import axios from "axios";
 import toast from "react-hot-toast";
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   headers: {
@@ -17,7 +18,19 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const data = response.data;
+    if (
+      typeof data === "string" &&
+      data.trimStart().startsWith("<!")
+    ) {
+      const msg =
+        "API URL misconfigured. Set VITE_BASE_URL in frontend/.env and rebuild.";
+      toast.error(msg);
+      return Promise.reject(new Error(msg));
+    }
+    return response;
+  },
   (error) => {
     if (!error.response) {
       toast.error("Network error. Please check your connection.");
