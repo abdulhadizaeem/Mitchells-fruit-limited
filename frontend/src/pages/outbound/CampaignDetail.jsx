@@ -6,6 +6,7 @@ import {
   Trash2,
   Upload,
   Play,
+  Phone,
   Loader2,
   RefreshCw,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import {
   deleteOutboundContactApi,
   importOutboundContactsApi,
   startOutboundCampaignApi,
+  startOutboundCallApi,
 } from "../../api/api";
 import { C, StatusBadge, Btn, spinStyle } from "./outboundStyles";
 
@@ -32,6 +34,8 @@ export default function CampaignDetail() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [callingId, setCallingId] = useState(null);
+  const [quickPhone, setQuickPhone] = useState("");
   const [importing, setImporting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -70,10 +74,54 @@ export default function CampaignDetail() {
   }, [fetchAll]);
 
   useEffect(() => {
-    if (showAdd || savingContact || starting) return undefined;
+    if (showAdd || savingContact || starting || callingId) return undefined;
     const interval = setInterval(() => fetchAll(true), 20000);
     return () => clearInterval(interval);
-  }, [fetchAll, showAdd, savingContact, starting]);
+  }, [fetchAll, showAdd, savingContact, starting, callingId]);
+
+  const apiError = (err, fallback) => {
+    const detail = err?.response?.data?.detail ?? err;
+    if (typeof detail === "string") return detail;
+    if (detail?.message) return detail.message;
+    return fallback;
+  };
+
+  const callContact = async (contactId) => {
+    if (callingId || starting) return;
+    setCallingId(contactId);
+    try {
+      const call = await startOutboundCallApi({ contact_id: contactId });
+      toast.success(`Calling ${call.phone_number}`);
+      await fetchAll(true);
+    } catch (err) {
+      toast.error(apiError(err, "Failed to start call"));
+    } finally {
+      setCallingId(null);
+    }
+  };
+
+  const quickCall = async (e) => {
+    e.preventDefault();
+    if (callingId || starting) return;
+    if (!quickPhone.trim()) {
+      toast.error("Enter a phone number");
+      return;
+    }
+    setCallingId("quick");
+    try {
+      const call = await startOutboundCallApi({
+        campaign_id: id,
+        phone_number: quickPhone.trim(),
+      });
+      toast.success(`Calling ${call.phone_number}`);
+      setQuickPhone("");
+      await fetchAll(true);
+    } catch (err) {
+      toast.error(apiError(err, "Failed to start call"));
+    } finally {
+      setCallingId(null);
+    }
+  };
 
   const addContact = async (e) => {
     e.preventDefault();
@@ -90,8 +138,7 @@ export default function CampaignDetail() {
       setForm({ name: "", phone_number: "", email: "", company: "" });
       await fetchAll(true);
     } catch (err) {
-      const detail = err?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Failed to add contact");
+      toast.error(apiError(err, "Failed to add contact"));
     } finally {
       setSavingContact(false);
     }
@@ -136,8 +183,7 @@ export default function CampaignDetail() {
       toast.success(`Started calling ${result.queued_contacts} contacts`);
       await fetchAll(true);
     } catch (err) {
-      const detail = err?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Failed to start campaign");
+      toast.error(apiError(err, "Failed to start campaign"));
     } finally {
       setStarting(false);
     }
@@ -177,13 +223,53 @@ export default function CampaignDetail() {
         <Btn
           variant="success"
           loading={starting}
-          disabled={campaign.status === "completed"}
+          disabled={!stats?.pending || !!callingId}
           onClick={startCampaign}
         >
           <Play size={14} />
-          {starting ? "Starting…" : "Start Calling"}
+          {starting ? "Starting…" : "Call All Pending"}
         </Btn>
       </div>
+
+      <form
+        onSubmit={quickCall}
+        style={{
+          display: "flex",
+          gap: 8,
+          marginBottom: 20,
+          flexWrap: "wrap",
+          alignItems: "center",
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          padding: "14px 16px",
+        }}
+      >
+        <Phone size={18} style={{ color: C.purple, flexShrink: 0 }} />
+        <input
+          value={quickPhone}
+          onChange={(e) => setQuickPhone(e.target.value)}
+          placeholder="Phone number to call now (e.g. 03475574848)"
+          disabled={!!callingId || starting}
+          style={{
+            flex: 1,
+            minWidth: 200,
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: `1px solid ${C.border}`,
+            fontSize: ".85rem",
+          }}
+        />
+        <Btn
+          type="submit"
+          variant="primary"
+          loading={callingId === "quick"}
+          disabled={!!callingId && callingId !== "quick"}
+        >
+          <Phone size={14} />
+          {callingId === "quick" ? "Calling…" : "Call Now"}
+        </Btn>
+      </form>
 
       {stats && (
         <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
@@ -268,14 +354,29 @@ export default function CampaignDetail() {
                     <StatusBadge status={ct.status} />
                   </td>
                   <td style={{ padding: "12px 16px" }}>
-                    <Btn
-                      variant="danger"
-                      loading={deletingId === ct.id}
-                      disabled={!!deletingId}
-                      onClick={() => removeContact(ct.id)}
-                    >
-                      <Trash2 size={14} />
-                    </Btn>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <Btn
+                        variant="primary"
+                        loading={callingId === ct.id}
+                        disabled={
+                          ct.status === "calling" ||
+                          (!!callingId && callingId !== ct.id) ||
+                          starting
+                        }
+                        onClick={() => callContact(ct.id)}
+                        style={{ padding: "6px 10px" }}
+                      >
+                        <Phone size={14} />
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        loading={deletingId === ct.id}
+                        disabled={!!deletingId || !!callingId}
+                        onClick={() => removeContact(ct.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Btn>
+                    </div>
                   </td>
                 </tr>
               ))

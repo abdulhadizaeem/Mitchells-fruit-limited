@@ -180,6 +180,8 @@ const importOutboundContactsJsonApi = async (campaignId, contacts) =>
   ).data;
 const startOutboundCampaignApi = async (campaignId) =>
   (await axiosInstance.post(`/outbound/campaigns/${campaignId}/start`)).data;
+const startOutboundCallApi = async (data) =>
+  (await axiosInstance.post("/outbound/calls/start", data)).data;
 const getOutboundCallsApi = async (skip = 0, limit = 50, campaignId) => {
   const params = new URLSearchParams({ skip, limit });
   if (campaignId) params.append("campaign_id", campaignId);
@@ -228,6 +230,7 @@ export {
   reprintOrderApi,
   resetPasswordApi,
   startOutboundCampaignApi,
+  startOutboundCallApi,
   addOutboundContactApi,
   createOutboundCampaignApi,
   deleteOutboundCampaignApi,

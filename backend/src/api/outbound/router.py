@@ -250,9 +250,16 @@ async def start_call(
     if body.contact_id:
         call = await outbound_service.start_call(db, body.contact_id)
         return _call_response(call)
+    if body.campaign_id and body.phone_number:
+        call = await outbound_service.start_call_by_phone(
+            db,
+            body.campaign_id,
+            body.phone_number,
+        )
+        return _call_response(call)
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="contact_id is required",
+        detail="Provide contact_id or campaign_id with phone_number",
     )
 
 

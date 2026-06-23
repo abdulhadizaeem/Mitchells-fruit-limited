@@ -98,12 +98,15 @@ async def get_contact_by_phone_in_campaign(
     phone_number: str,
 ) -> OutboundContact | None:
     result = await db.execute(
-        select(OutboundContact).where(
+        select(OutboundContact)
+        .where(
             OutboundContact.campaign_id == campaign_id,
             OutboundContact.phone_number == phone_number,
         )
+        .order_by(OutboundContact.created_at.desc())
+        .limit(1)
     )
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 
 async def create_contact(

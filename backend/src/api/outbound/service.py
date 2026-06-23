@@ -176,16 +176,55 @@ class OutboundCallingService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contact not found",
             )
-        if contact.status not in ("pending", "failed"):
+        if contact.status == "calling":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Contact status is {contact.status}, cannot call",
+                detail="Contact is already being called",
             )
         campaign = await repo.get_campaign(db, contact.campaign_id)
         if not campaign:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Campaign not found",
+            )
+        return await self._dial_contact(db, campaign, contact)
+
+    async def start_call_by_phone(
+        self,
+        db: AsyncSession,
+        campaign_id: str,
+        phone_number: str,
+        name: str | None = None,
+    ):
+        campaign = await repo.get_campaign(db, campaign_id)
+        if not campaign:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Campaign not found",
+            )
+        try:
+            normalized = validate_phone_number(phone_number)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            )
+        contact = await repo.get_contact_by_phone_in_campaign(
+            db, campaign_id, normalized
+        )
+        if contact:
+            if contact.status == "calling":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Already calling this number",
+                )
+        else:
+            resolved_name, _, _ = merge_contact_payload(name=name)
+            contact = await repo.create_contact(
+                db,
+                campaign_id,
+                normalized,
+                resolved_name,
             )
         return await self._dial_contact(db, campaign, contact)
 
