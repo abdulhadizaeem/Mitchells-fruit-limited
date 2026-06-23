@@ -2,22 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getComplaintsApi } from "../../api/api";
 import toast from "react-hot-toast";
 import { AlertCircle, RefreshCw, Loader2, Package, Calendar } from "lucide-react";
-
-const C = {
-  pageBg: "#F8F8FC",
-  card: "#ffffff",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  border: "#EAEAF2",
-  purple: "#534AB7",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  redBdr: "rgba(229,69,69,.2)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-  goldBdr: "rgba(200,151,58,.2)",
-};
+import { C } from "../../theme/colors";
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
@@ -124,7 +109,7 @@ const Complaints = () => {
                 const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
                 return (
-                  <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, transition: "background .15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(83,74,183,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <tr key={c.id} style={{ borderBottom: `1px solid ${C.border}`, transition: "background .15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(27,63,122,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <td style={{ padding: "16px 20px", verticalAlign: "top" }}>
                       <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".8rem", fontWeight: 700, color: C.text, margin: "0 0 4px" }}>{c.caller_name || "Unknown Customer"}</p>
                       <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".7rem", color: C.textSub, margin: 0 }}>{c.caller_phone}</p>

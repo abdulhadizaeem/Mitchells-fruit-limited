@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PhoneOutgoing,
@@ -10,12 +10,8 @@ import {
   RefreshCw,
   ArrowRight,
 } from "lucide-react";
-import {
-  getOutboundStatsApi,
-  getOutboundCampaignsApi,
-  getOutboundCallsApi,
-} from "../../api/api";
-import { C } from "./outboundStyles";
+import { getOutboundStatsApi } from "../../api/api";
+import { C, Btn, spinStyle } from "./outboundStyles";
 
 function StatCard({ icon, label, value, loading }) {
   return (
@@ -50,7 +46,7 @@ function StatCard({ icon, label, value, loading }) {
       </div>
       <div style={{ fontSize: "1.75rem", fontWeight: 800, color: C.text }}>
         {loading ? (
-          <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
+          <Loader2 size={20} style={spinStyle} />
         ) : (
           value ?? "—"
         )}
@@ -62,22 +58,28 @@ function StatCard({ icon, label, value, loading }) {
 export default function OutboundDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const fetchLock = useRef(false);
 
-  const fetchStats = useCallback(async () => {
-    setLoading(true);
+  const fetchStats = useCallback(async (silent = false) => {
+    if (fetchLock.current) return;
+    fetchLock.current = true;
+    if (!silent) setRefreshing(true);
     try {
       setStats(await getOutboundStatsApi());
     } catch {
-      setStats(null);
+      if (!silent) setStats(null);
     } finally {
-      setLoading(false);
+      fetchLock.current = false;
+      setInitialLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 15000);
+    fetchStats(false);
+    const interval = setInterval(() => fetchStats(true), 30000);
     return () => clearInterval(interval);
   }, [fetchStats]);
 
@@ -101,30 +103,15 @@ export default function OutboundDashboard() {
             Manage campaigns and outbound calls
           </p>
         </div>
-        <button
-          onClick={fetchStats}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 10,
-            padding: "8px 14px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: ".8rem",
-            color: C.textSub,
-          }}
-        >
+        <Btn variant="secondary" loading={refreshing} onClick={() => fetchStats(false)}>
           <RefreshCw size={14} />
           Refresh
-        </button>
+        </Btn>
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
         {cards.map((c) => (
-          <StatCard key={c.label} {...c} loading={loading} />
+          <StatCard key={c.label} {...c} loading={initialLoading} />
         ))}
       </div>
 
@@ -133,26 +120,10 @@ export default function OutboundDashboard() {
           { label: "Campaigns", path: "/dashboard/calling/outbound/campaigns" },
           { label: "All Calls", path: "/dashboard/calling/outbound/calls" },
         ].map((item) => (
-          <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: C.purple,
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "10px 18px",
-              cursor: "pointer",
-              fontWeight: 700,
-              fontSize: ".82rem",
-            }}
-          >
+          <Btn key={item.path} variant="primary" onClick={() => navigate(item.path)}>
             {item.label}
             <ArrowRight size={14} />
-          </button>
+          </Btn>
         ))}
       </div>
     </div>

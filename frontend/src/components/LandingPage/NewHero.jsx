@@ -27,7 +27,7 @@ function DashboardCard() {
     { v: "0", cls: "", label: "Missed Calls" },
     { v: "24/7", cls: "", label: "Always On" }
   ].map((m, i) => <div key={i} style={{ background: "#F8F8FC", borderRadius: "14px", padding: "22px 18px", border: "1px solid #EAEAF2" }}>
-            <div style={{ fontSize: "3rem", fontWeight: 800, lineHeight: 1, letterSpacing: "-.03em", color: m.cls === "ap" ? "#7F77DD" : m.cls === "ag" ? "#1DB87A" : "#0F0F1A" }}>{m.v}</div>
+            <div style={{ fontSize: "3rem", fontWeight: 800, lineHeight: 1, letterSpacing: "-.03em", color: m.cls === "ap" ? "#2A5BA8" : m.cls === "ag" ? "#1DB87A" : "#0F0F1A" }}>{m.v}</div>
             <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".77rem", color: "#8888A8", marginTop: "6px", fontWeight: 600, letterSpacing: ".05em", textTransform: "uppercase" }}>{m.label}</div>
           </div>)}
       </div>
@@ -44,7 +44,7 @@ function DashboardCard() {
                 <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".99rem", color: "#8888A8", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.note}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                <span style={{ fontSize: ".79rem", fontWeight: 700, padding: "4px 11px", borderRadius: "100px", letterSpacing: ".04em", ...row.badgeCls === "pk" ? { background: "rgba(127,119,221,.1)", color: "#534AB7" } : row.badgeCls === "dl" ? { background: "rgba(200,151,58,.1)", color: "#C8973A" } : { background: "rgba(29,184,122,.1)", color: "#0a8a55" } }}>
+                <span style={{ fontSize: ".79rem", fontWeight: 700, padding: "4px 11px", borderRadius: "100px", letterSpacing: ".04em", ...row.badgeCls === "pk" ? { background: "rgba(42,91,168,.1)", color: "#1B3F7A" } : row.badgeCls === "dl" ? { background: "rgba(200,151,58,.1)", color: "#C8973A" } : { background: "rgba(29,184,122,.1)", color: "#0a8a55" } }}>
                   {row.badge}
                 </span>
                 <span style={{ fontFamily: "Sora,sans-serif", fontSize: "1.09rem", fontWeight: 700, color: "#0F0F1A" }}>{row.amt}</span>
@@ -63,24 +63,24 @@ function HeroSection() {
         @keyframes chipfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
         .hv-chip{background:#fff;border-radius:12px;border:1px solid #EAEAF2;box-shadow:0 8px 30px rgba(15,15,26,.1);padding:11px 15px;font-size:1.01rem;font-weight:600;color:#0F0F1A;white-space:nowrap;animation:chipfloat 4s ease-in-out infinite;display:flex;align-items:center;gap:6px;}
         .hv-chip .ci{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-        .hv-chip .ci.g{background:rgba(29,184,122,.1)}.hv-chip .ci.p{background:rgba(127,119,221,.1)}.hv-chip .ci.a{background:rgba(200,151,58,.1)}
+        .hv-chip .ci.g{background:rgba(29,184,122,.1)}.hv-chip .ci.p{background:rgba(42,91,168,.1)}.hv-chip .ci.a{background:rgba(200,151,58,.1)}
         .h-tag{opacity:0;animation:hfade .8s .1s forwards;}
         .h1-anim{opacity:0;animation:hfade .9s .25s forwards;}
         .h-sub{opacity:0;animation:hfade .9s .4s forwards;}
         .h-cta{opacity:0;animation:hfade .9s .55s forwards;}
         .h-proof{opacity:0;animation:hfade .9s .7s forwards;}
         .h-visual{opacity:0;animation:hfade 1.2s .9s forwards;}
-        .h-btn-p{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7F77DD,#534AB7);color:#fff;padding:15px 32px;border-radius:10px;font-weight:700;font-size:1.22rem;text-decoration:none;border:none;cursor:pointer;box-shadow:0 8px 32px rgba(127,119,221,.35);transition:all .25s;position:relative;overflow:hidden;font-family:Sora,sans-serif;}
-        .h-btn-p:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(127,119,221,.45);}
+        .h-btn-p{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#2A5BA8,#1B3F7A);color:#fff;padding:15px 32px;border-radius:10px;font-weight:700;font-size:1.22rem;text-decoration:none;border:none;cursor:pointer;box-shadow:0 8px 32px rgba(42,91,168,.35);transition:all .25s;position:relative;overflow:hidden;font-family:Sora,sans-serif;}
+        .h-btn-p:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(42,91,168,.45);}
         .h-btn-s{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#0F0F1A;padding:15px 32px;border-radius:10px;font-weight:600;font-size:1.22rem;text-decoration:none;border:1.5px solid #EAEAF2;cursor:pointer;transition:all .25s;font-family:Sora,sans-serif;}
-        .h-btn-s:hover{border-color:#7F77DD;color:#7F77DD;transform:translateY(-2px);}
+        .h-btn-s:hover{border-color:#2A5BA8;color:#2A5BA8;transform:translateY(-2px);}
         .proof-item{display:flex;align-items:center;gap:7px;font-size:.9rem;color:#8888A8;font-weight:500;}
         .proof-sep{width:4px;height:4px;border-radius:50%;background:#EAEAF2;}
 
         /* Dashboard card */
         .h-dash-card {
           background:#fff;border-radius:24px;border:1px solid #EAEAF2;
-          box-shadow:0 50px 140px rgba(15,15,26,.14),0 0 0 1px rgba(127,119,221,.07);
+          box-shadow:0 50px 140px rgba(15,15,26,.14),0 0 0 1px rgba(42,91,168,.07);
           padding:40px;text-align:left;
         }
         .h-dash-metrics {
@@ -141,11 +141,11 @@ function HeroSection() {
 
       <section className="hero-section" style={{ minHeight: "110vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "150px 60px 120px", position: "relative", overflow: "visible" }}>
         
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% -10%,rgba(127,119,221,.12) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(200,151,58,.06) 0%,transparent 50%),radial-gradient(ellipse 40% 30% at 10% 70%,rgba(127,119,221,.06) 0%,transparent 50%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle,rgba(127,119,221,.12) 1px,transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none", opacity: 0.6 }} />
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% -10%,rgba(42,91,168,.12) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(200,151,58,.06) 0%,transparent 50%),radial-gradient(ellipse 40% 30% at 10% 70%,rgba(42,91,168,.06) 0%,transparent 50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle,rgba(42,91,168,.12) 1px,transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none", opacity: 0.6 }} />
 
         
-        <div className="h-tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#F0EFFC", border: "1px solid rgba(127,119,221,.2)", color: "#534AB7", fontSize: ".84rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 16px", borderRadius: "100px", marginBottom: "32px", fontFamily: "Sora,sans-serif" }}>
+        <div className="h-tag" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#F0EFFC", border: "1px solid rgba(42,91,168,.2)", color: "#1B3F7A", fontSize: ".84rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 16px", borderRadius: "100px", marginBottom: "32px", fontFamily: "Sora,sans-serif" }}>
           <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#1DB87A", animation: "ldot 2s ease-in-out infinite", flexShrink: 0 }} />
           Zero Missed Orders = Zero Missed Revenue.
         </div>
@@ -153,7 +153,7 @@ function HeroSection() {
         
         <h1 className="h1-anim" style={{ fontFamily: "Sora,sans-serif", fontSize: "clamp(2.6rem,6.2vw,7rem)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-.04em", color: "#0F0F1A", marginBottom: "10px", maxWidth: "1080px" }}>
           <span style={{ whiteSpace: "nowrap" }}>Your Business Phone,</span><br />
-          <span style={{ background: "linear-gradient(135deg,#7F77DD,#534AB7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", whiteSpace: "nowrap" }}>Answered by AI.</span><br />
+          <span style={{ background: "linear-gradient(135deg,#2A5BA8,#1B3F7A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", whiteSpace: "nowrap" }}>Answered by AI.</span><br />
           <em style={{ fontFamily: "Lora,Georgia,serif", fontStyle: "italic", fontWeight: 600, whiteSpace: "nowrap" }}>Every Single Time.</em>
         </h1>
 
@@ -200,7 +200,7 @@ function HeroSection() {
               SMS sent to James W.
             </div>
             <div className="hv-chip" style={{ animationDelay: "-1.5s" }}>
-              <div className="ci p"><svg width="11" height="11" fill="none" stroke="#7F77DD" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 3h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" /></svg></div>
+              <div className="ci p"><svg width="11" height="11" fill="none" stroke="#2A5BA8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 3h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" /></svg></div>
               Call answered instantly
             </div>
             <div className="hv-chip" style={{ animationDelay: "-3s" }}>

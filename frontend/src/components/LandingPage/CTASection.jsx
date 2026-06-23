@@ -11,8 +11,8 @@ function CTASection() {
       `}</style>
       <section id="demo" className="cta-section" style={{ background: "linear-gradient(135deg,#0F0F1A 0%,#1a1a3a 100%)", padding: "100px 60px", textAlign: "center", position: "relative", overflow: "hidden" }}>
         
-        <div style={{ position: "absolute", width: "700px", height: "700px", background: "radial-gradient(circle,rgba(127,119,221,.15) 0%,transparent 65%)", left: "50%", top: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle,rgba(127,119,221,.15) 1px,transparent 1px)", backgroundSize: "40px 40px", pointerEvents: "none", opacity: 0.5 }} />
+        <div style={{ position: "absolute", width: "700px", height: "700px", background: "radial-gradient(circle,rgba(42,91,168,.15) 0%,transparent 65%)", left: "50%", top: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle,rgba(42,91,168,.15) 1px,transparent 1px)", backgroundSize: "40px 40px", pointerEvents: "none", opacity: 0.5 }} />
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: "680px", margin: "0 auto" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(29,184,122,.1)", border: "1px solid rgba(29,184,122,.2)", color: "#1DB87A", fontSize: ".82rem", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", padding: "6px 16px", borderRadius: "100px", marginBottom: "26px", fontFamily: "Sora,sans-serif" }}>
@@ -21,7 +21,7 @@ function CTASection() {
           </div>
 
           <h2 style={{ fontFamily: "Sora,sans-serif", fontSize: "clamp(2rem,5.6vw,4.4rem)", fontWeight: 800, color: "#fff", lineHeight: 1.08, letterSpacing: "-.03em", marginBottom: "18px" }}>
-            Try Mitchells free.<br />Pay only <em style={{ fontFamily: "Lora,serif", fontStyle: "italic", fontWeight: 600, color: "#7F77DD" }}>if you love it.</em>
+            Try Mitchells free.<br />Pay only <em style={{ fontFamily: "Lora,serif", fontStyle: "italic", fontWeight: 600, color: "#2A5BA8" }}>if you love it.</em>
           </h2>
 
           <p style={{ fontFamily: "Sora,sans-serif", fontSize: "1.11rem", color: "rgba(255,255,255,.48)", lineHeight: 1.75, marginBottom: "40px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto" }}>

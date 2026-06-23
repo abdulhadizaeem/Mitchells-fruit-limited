@@ -80,7 +80,7 @@ function Navbar() {
         .vx-logo { display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none; }
         .vx-logo-name {
           font-size:1.38rem;font-weight:800;letter-spacing:-.03em;
-          background:linear-gradient(135deg,#0F0F1A 30%,#534AB7 100%);
+          background:linear-gradient(135deg,#0F0F1A 30%,#1B3F7A 100%);
           -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
         }
         .vx-nav-links { display:flex;gap:32px;list-style:none;margin:0;padding:0; }
@@ -92,7 +92,7 @@ function Navbar() {
         }
         .vx-nav-link::after {
           content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;
-          background:#7F77DD;border-radius:2px;transition:width .22s cubic-bezier(.16,1,.3,1);
+          background:#2A5BA8;border-radius:2px;transition:width .22s cubic-bezier(.16,1,.3,1);
         }
         .vx-nav-link:hover,.vx-nav-link.active {color:#0F0F1A;}
         .vx-nav-link:hover::after,.vx-nav-link.active::after {width:100%;}
@@ -102,15 +102,15 @@ function Navbar() {
           cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;
           transition:all .2s;
         }
-        .vx-btn-login:hover{border-color:#7F77DD;color:#534AB7;background:#F5F4FE;}
+        .vx-btn-login:hover{border-color:#2A5BA8;color:#1B3F7A;background:#F5F4FE;}
         .vx-btn-demo {
-          background:linear-gradient(135deg,#534AB7 0%,#7F77DD 100%);
+          background:linear-gradient(135deg,#1B3F7A 0%,#2A5BA8 100%);
           color:#fff;padding:9px 22px;border-radius:8px;
           font-size:.88rem;font-weight:600;border:none;cursor:pointer;
           transition:all .22s;font-family:'Sora',sans-serif;white-space:nowrap;
-          box-shadow:0 2px 12px rgba(83,74,183,.25);
+          box-shadow:0 2px 12px rgba(27,63,122,.25);
         }
-        .vx-btn-demo:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 8px 24px rgba(83,74,183,.38);}
+        .vx-btn-demo:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 8px 24px rgba(27,63,122,.38);}
         .vx-dropdown {
           position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
           background:#fff;border:1px solid #EAEAF2;border-radius:14px;
@@ -138,35 +138,35 @@ function Navbar() {
         }
         .vx-res-icon {
           width:32px;height:32px;border-radius:8px;background:#F0EFFC;display:flex;
-          align-items:center;justify-content:center;color:#7F77DD;flex-shrink:0;
+          align-items:center;justify-content:center;color:#2A5BA8;flex-shrink:0;
           transition:background .15s,color .15s;
         }
-        .vx-dd-row:hover .vx-res-icon{background:#534AB7;color:#fff;}
+        .vx-dd-row:hover .vx-res-icon{background:#1B3F7A;color:#fff;}
         .vx-chevron { transition:transform .2s; }
         .vx-chevron.open { transform:rotate(180deg); }
         .vx-profile-btn {
           display:flex;align-items:center;gap:8px;
-          background:rgba(127,119,221,.08);border:1.5px solid rgba(127,119,221,.2);
+          background:rgba(42,91,168,.08);border:1.5px solid rgba(42,91,168,.2);
           border-radius:100px;padding:4px 14px 4px 4px;
           cursor:pointer;font-family:'Sora',sans-serif;
           transition:background .2s,border-color .2s,box-shadow .2s;
         }
         .vx-profile-btn:hover{
-          background:rgba(127,119,221,.14);border-color:rgba(127,119,221,.42);
-          box-shadow:0 0 0 3px rgba(127,119,221,.08);
+          background:rgba(42,91,168,.14);border-color:rgba(42,91,168,.42);
+          box-shadow:0 0 0 3px rgba(42,91,168,.08);
         }
         .vx-av {
           width:28px;height:28px;border-radius:50%;
-          background:linear-gradient(135deg,#534AB7,#7F77DD);
+          background:linear-gradient(135deg,#1B3F7A,#2A5BA8);
           color:#fff;display:flex;align-items:center;justify-content:center;
           font-size:11px;font-weight:800;flex-shrink:0;
         }
         .vx-av-lg {
           width:42px;height:42px;border-radius:50%;
-          background:linear-gradient(135deg,#534AB7,#7F77DD);
+          background:linear-gradient(135deg,#1B3F7A,#2A5BA8);
           color:#fff;display:flex;align-items:center;justify-content:center;
           font-size:16px;font-weight:800;flex-shrink:0;
-          box-shadow:0 0 0 3px rgba(127,119,221,.25);
+          box-shadow:0 0 0 3px rgba(42,91,168,.25);
         }
         .vx-profile-dd-btn {
           width:100%;display:flex;align-items:center;gap:10px;
@@ -179,10 +179,10 @@ function Navbar() {
         .vx-profile-dd-icon {
           width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
           justify-content:center;flex-shrink:0;
-          background:#F0EFFC;color:#7F77DD;
+          background:#F0EFFC;color:#2A5BA8;
           transition:background .15s,color .15s;
         }
-        .vx-profile-dd-btn:hover .vx-profile-dd-icon { background:#534AB7;color:#fff; }
+        .vx-profile-dd-btn:hover .vx-profile-dd-icon { background:#1B3F7A;color:#fff; }
         @keyframes vxProfileIn {
           from{opacity:0;transform:translateY(-10px) scale(.97)}
           to{opacity:1;transform:translateY(0) scale(1)}
@@ -197,7 +197,7 @@ function Navbar() {
           transition:border-color .2s,color .2s,background .2s;
           justify-self:end;
         }
-        .vx-hamburger:hover { border-color:#7F77DD;color:#534AB7;background:#F5F4FE; }
+        .vx-hamburger:hover { border-color:#2A5BA8;color:#1B3F7A;background:#F5F4FE; }
 
         .vx-mobile-menu {
           display:none;
@@ -299,7 +299,7 @@ function Navbar() {
                 <span style={{ fontSize: "12px", fontWeight: 600, color: "#525270", maxWidth: "110px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user?.email ?? ""}
                 </span>
-                <ChevronDown size={12} className={`vx-chevron ${openDropdown === "profile" ? "open" : ""}`} style={{ color: "#7F77DD" }} />
+                <ChevronDown size={12} className={`vx-chevron ${openDropdown === "profile" ? "open" : ""}`} style={{ color: "#2A5BA8" }} />
               </button>
               {openDropdown === "profile" && <div
     style={{
@@ -318,13 +318,13 @@ function Navbar() {
   >
                   <div style={{ position: "absolute", top: "-6px", right: "22px", width: "12px", height: "12px", background: "#FAF9FF", border: "1px solid #EAEAF2", transform: "rotate(45deg)", borderBottom: "none", borderRight: "none", zIndex: 1 }} />
                   <div style={{ position: "relative", overflow: "hidden", padding: "20px 18px 16px", background: "linear-gradient(145deg,#0F0F1A 0%,#1A1830 60%,#0e1520 100%)", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
-                    <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", background: "radial-gradient(circle,rgba(127,119,221,.28) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+                    <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", background: "radial-gradient(circle,rgba(42,91,168,.28) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
                     <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "12px" }}>
                       <div className="vx-av-lg">{initial}</div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".8rem", fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px" }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: ".62rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "100px", background: user?.role === "admin" ? "rgba(83,74,183,.3)" : "rgba(29,184,122,.2)", color: user?.role === "admin" ? "#A9A4F0" : "#1DB87A", border: `1px solid ${user?.role === "admin" ? "rgba(127,119,221,.3)" : "rgba(29,184,122,.25)"}` }}>{user?.role ?? "admin"}</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: ".62rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "100px", background: user?.role === "admin" ? "rgba(27,63,122,.3)" : "rgba(29,184,122,.2)", color: user?.role === "admin" ? "#E8C56A" : "#1DB87A", border: `1px solid ${user?.role === "admin" ? "rgba(42,91,168,.3)" : "rgba(29,184,122,.25)"}` }}>{user?.role ?? "admin"}</span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: ".62rem", fontWeight: 600, color: "rgba(255,255,255,.38)" }}>
                             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#1DB87A", display: "inline-block" }} />
                             Active

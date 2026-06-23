@@ -10,7 +10,7 @@ function SocialProofSection() {
       `}</style>
       <section id="review" className="social-section" style={{ background: "#fff", padding: "120px 60px" }}>
         <div style={{ maxWidth: "1120px", margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#7F77DD", marginBottom: "14px", display: "block", fontFamily: "Sora,sans-serif" }}>Customer Stories</div>
+          <div style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#2A5BA8", marginBottom: "14px", display: "block", fontFamily: "Sora,sans-serif" }}>Customer Stories</div>
           <h2 style={{ fontFamily: "Sora,sans-serif", fontSize: "clamp(2.5rem,4.4vw,4rem)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-.03em", color: "#0F0F1A", maxWidth: "480px", margin: "0 auto" }}>
             Pays for itself<br /><em style={{ fontFamily: "Lora,serif", fontStyle: "italic", fontWeight: 600 }}>on the first shift.</em>
           </h2>
@@ -29,11 +29,11 @@ function SocialProofSection() {
               </p>
 
               <div style={{ display: "flex", alignItems: "center", gap: "13px", borderTop: "1px solid #EAEAF2", paddingTop: "22px" }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#7F77DD,#534AB7)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "1.22rem", color: "#fff", flexShrink: 0 }}>MH</div>
+                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg,#2A5BA8,#1B3F7A)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "1.22rem", color: "#fff", flexShrink: 0 }}>MH</div>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontFamily: "Sora,sans-serif", fontSize: "1.01rem", fontWeight: 700, color: "#0F0F1A" }}>Mohamed H.</div>
                   <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".87rem", color: "#8888A8", marginTop: "2px" }}>Owner &amp; Founder</div>
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#F0EFFC", color: "#534AB7", fontSize: ".86rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "100px", marginTop: "4px" }}>Hot Chickz</div>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#F0EFFC", color: "#1B3F7A", fontSize: ".86rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", padding: "2px 8px", borderRadius: "100px", marginTop: "4px" }}>Hot Chickz</div>
                 </div>
               </div>
             </div>

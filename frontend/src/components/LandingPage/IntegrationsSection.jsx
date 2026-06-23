@@ -152,7 +152,7 @@ function IntegrationsSection() {
       <section id="integrations" className="integ-section" style={{ background: "#F8F8FC", padding: "120px 60px" }}>
         <div style={{ maxWidth: "1160px", margin: "0 auto" }}>
           <div className="integ-header" style={{ textAlign: "center", marginBottom: "72px" }}>
-            <div style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#7F77DD", marginBottom: "14px", fontFamily: "Sora,sans-serif" }}>Integrations</div>
+            <div style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#2A5BA8", marginBottom: "14px", fontFamily: "Sora,sans-serif" }}>Integrations</div>
             <h2 style={{ fontFamily: "Sora,sans-serif", fontSize: "clamp(2rem,4.4vw,4rem)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-.03em", color: "#0F0F1A", maxWidth: "540px", margin: "0 auto 16px" }}>
               Works with every POS you already use
             </h2>
@@ -167,7 +167,7 @@ function IntegrationsSection() {
           <div style={{ textAlign: "center" }}>
             <p style={{ fontFamily: "Sora,sans-serif", fontSize: "1.11rem", color: "#8888A8" }}>
               Don't see your POS?{" "}
-              <a href="mailto:hello@Mitchells.ai" style={{ color: "#534AB7", fontWeight: 700, textDecoration: "none" }}>Contact us</a>
+              <a href="mailto:hello@Mitchells.ai" style={{ color: "#1B3F7A", fontWeight: 700, textDecoration: "none" }}>Contact us</a>
               {" "}— we integrate on request.
             </p>
           </div>

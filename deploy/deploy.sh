@@ -2,7 +2,7 @@
 #
 # Mitchell's Fruit Limited — server deploy script
 # Pulls dev branch, installs deps, runs backend via systemd (port 8000)
-# and frontend via PM2 (Vite preview on port 5173).
+# and frontend via PM2 (Vite preview on port 3000).
 #
 # Usage (on the server):
 #   chmod +x deploy/deploy.sh
@@ -24,7 +24,7 @@ APP_HOME="${APP_HOME:-$APP_DIR}"
 NPM_CACHE="${NPM_CACHE:-$APP_DIR/.npm-cache}"
 PM2_HOME="${PM2_HOME:-$APP_DIR/.pm2}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
-FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 SERVICE_NAME="${SERVICE_NAME:-mitchells-backend}"
 PM2_APP_NAME="${PM2_APP_NAME:-mitchells-frontend}"
 PYTHON="${PYTHON:-python3}"
@@ -41,9 +41,15 @@ run_as_app() {
     bash -c "$1"
 }
 
+git_safe() {
+  git -c "safe.directory=$APP_DIR" "$@"
+}
+
 if [[ "${EUID}" -ne 0 ]]; then
   die "Run as root: sudo $0"
 fi
+
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 
 command -v git >/dev/null    || die "git is not installed"
 command -v "$PYTHON" >/dev/null || die "$PYTHON is not installed"
@@ -56,13 +62,13 @@ log "Branch: $BRANCH"
 # ── Clone or pull ───────────────────────────────────────────────────────────
 if [[ -d "$APP_DIR/.git" ]]; then
   log "Pulling latest from origin/$BRANCH ..."
-  git -C "$APP_DIR" fetch origin "$BRANCH"
-  git -C "$APP_DIR" checkout "$BRANCH"
-  git -C "$APP_DIR" pull origin "$BRANCH"
+  git_safe -C "$APP_DIR" fetch origin "$BRANCH"
+  git_safe -C "$APP_DIR" checkout "$BRANCH"
+  git_safe -C "$APP_DIR" pull origin "$BRANCH"
 else
   log "Cloning repository ..."
   mkdir -p "$(dirname "$APP_DIR")"
-  git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
+  git_safe clone --branch "$BRANCH" --single-branch "$REPO_URL" "$APP_DIR"
 fi
 
 # ── Ownership + writable dirs for npm/pm2 ─────────────────────────────────────
@@ -140,11 +146,13 @@ module.exports = {
   apps: [
     {
       name: "${PM2_APP_NAME}",
-      cwd: "${APP_DIR}/frontend",
-      script: "node_modules/vite/bin/vite.js",
-      args: "preview --host 0.0.0.0 --port ${FRONTEND_PORT}",
-      interpreter: "node",
-      env: { NODE_ENV: "production" },
+      script: "serve",
+      env: {
+        PM2_SERVE_PATH: "${APP_DIR}/frontend/dist",
+        PM2_SERVE_PORT: ${FRONTEND_PORT},
+        PM2_SERVE_SPA: "true",
+        PM2_SERVE_HOMEPAGE: "/index.html",
+      },
       autorestart: true,
       max_restarts: 10,
       watch: false,
@@ -153,6 +161,8 @@ module.exports = {
 };
 EOF
 chown "$APP_USER:$APP_USER" "$ECOSYSTEM"
+
+[[ -d "$APP_DIR/frontend/dist" ]] || die "Frontend build missing — run: cd $APP_DIR/frontend && npm run build"
 
 log "Starting frontend with PM2 ($PM2_APP_NAME) ..."
 

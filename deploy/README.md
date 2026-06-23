@@ -1,6 +1,6 @@
 # Server deploy (Linux)
 
-One-shot deploy: pull `dev`, backend on **8000** (systemd), frontend on **5173** (PM2).
+One-shot deploy: pull `dev`, backend on **8000** (systemd), frontend on **3000** (PM2).
 
 Repo: [abdulhadizaeem/Mitchells-fruit-limited](https://github.com/abdulhadizaeem/Mitchells-fruit-limited.git)
 
@@ -38,6 +38,18 @@ sudo ./deploy/deploy.sh
 ```bash
 sudo /opt/mitchells-fruit-limited/deploy/deploy.sh
 ```
+
+## Git "dubious ownership"
+
+After deploy, the repo is owned by `www-data`. Use the deploy script to update, or pull as root:
+
+```bash
+sudo git config --global --add safe.directory /opt/mitchells-fruit-limited
+sudo git -C /opt/mitchells-fruit-limited pull origin dev
+sudo chown -R www-data:www-data /opt/mitchells-fruit-limited
+```
+
+Do not run `git config --global` as your normal user for system paths unless you intend to.
 
 ## npm EACCES on `/var/www`
 

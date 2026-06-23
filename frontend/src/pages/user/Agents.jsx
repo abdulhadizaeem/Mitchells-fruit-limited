@@ -12,22 +12,14 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getAgentsApi, createAgentApi, getVoicesApi } from "../../api/api";
+import { C as themeC, BRAND } from "../../theme/colors";
+
 const C = {
-  white: "#FFFFFF",
-  bg: "#F8F8FC",
-  purple: "#534AB7",
-  purpleAlt: "#7F77DD",
-  purpleLight: "rgba(83,74,183,0.06)",
-  purpleSolid: "#433A9F",
-  green: "#1DB87A",
-  greenLight: "rgba(29,184,122,0.09)",
-  red: "#E54545",
-  border: "#EAEAF2",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  font: "'Sora', sans-serif"
+  ...themeC,
+  purpleSolid: BRAND.blueDark,
+  purpleLight: "rgba(27,63,122,0.06)",
 };
+
 const AGENTS_CSS = `
   @keyframes modalFadeIn {
     from { opacity: 0; transform: scale(0.96) translateY(10px); }
@@ -47,7 +39,7 @@ const AGENTS_CSS = `
   }
   .agent-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(83,74,183,0.05);
+    box-shadow: 0 12px 30px rgba(27,63,122,0.05);
     border-color: ${C.purpleAlt};
   }
 

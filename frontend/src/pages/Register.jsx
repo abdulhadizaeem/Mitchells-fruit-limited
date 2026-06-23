@@ -53,13 +53,13 @@ function Register() {
     width: "100%",
     padding: "12px 16px",
     borderRadius: "10px",
-    border: `1.5px solid ${focusedField === field ? "#7F77DD" : "#EAEAF2"}`,
+    border: `1.5px solid ${focusedField === field ? "#2A5BA8" : "#EAEAF2"}`,
     outline: "none",
     fontFamily: "Sora, sans-serif",
     fontSize: ".9rem",
     color: "#0F0F1A",
     background: focusedField === field ? "#FDFCFF" : "#F8F8FC",
-    boxShadow: focusedField === field ? "0 0 0 3px rgba(127,119,221,.12)" : "none",
+    boxShadow: focusedField === field ? "0 0 0 3px rgba(42,91,168,.12)" : "none",
     transition: "border-color .2s, box-shadow .2s, background .2s",
     boxSizing: "border-box",
     opacity: loading ? 0.6 : 1
@@ -80,7 +80,7 @@ function Register() {
         }
         .vx-pl-orb1 {
           position:absolute;top:-120px;right:-120px;width:480px;height:480px;
-          background:radial-gradient(circle,rgba(127,119,221,.22) 0%,transparent 70%);
+          background:radial-gradient(circle,rgba(42,91,168,.22) 0%,transparent 70%);
           border-radius:50%;animation:orb 8s ease-in-out infinite;pointer-events:none;
         }
         .vx-pl-orb2 {
@@ -93,7 +93,7 @@ function Register() {
         .vx-stat-row { display:flex;gap:32px;margin:36px 0; }
         .vx-stat-num {
           font-size:2.4rem;font-weight:800;letter-spacing:-.04em;
-          background:linear-gradient(135deg,#fff 30%,#A9A4F0 100%);
+          background:linear-gradient(135deg,#fff 30%,#E8C56A 100%);
           -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
           line-height:1;
         }
@@ -114,13 +114,13 @@ function Register() {
 
         .vx-login-submit {
           width:100%;padding:13px;border-radius:10px;border:none;
-          background:linear-gradient(135deg,#534AB7 0%,#7F77DD 100%);
+          background:linear-gradient(135deg,#1B3F7A 0%,#2A5BA8 100%);
           color:#fff;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;
           cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-          box-shadow:0 4px 18px rgba(83,74,183,.28);
+          box-shadow:0 4px 18px rgba(27,63,122,.28);
           transition:filter .2s,transform .2s,box-shadow .2s;
         }
-        .vx-login-submit:hover:not(:disabled){ filter:brightness(1.09);transform:translateY(-1px);box-shadow:0 8px 28px rgba(83,74,183,.4); }
+        .vx-login-submit:hover:not(:disabled){ filter:brightness(1.09);transform:translateY(-1px);box-shadow:0 8px 28px rgba(27,63,122,.4); }
         .vx-login-submit:disabled { opacity:.65;cursor:not-allowed; }
 
         .vx-spin { animation:spin .8s linear infinite; }
@@ -171,7 +171,7 @@ function Register() {
                 "{TESTIMONIAL.quote}"
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#7F77DD,#534AB7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".75rem", fontWeight: 800, color: "#fff" }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2A5BA8,#1B3F7A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".75rem", fontWeight: 800, color: "#fff" }}>
                   {TESTIMONIAL.name[0]}
                 </div>
                 <div>
@@ -273,7 +273,7 @@ function Register() {
 
             <p style={{ margin: "24px 0 0", textAlign: "center", fontSize: ".85rem", color: "#5F5F6E", fontFamily: "Sora, sans-serif" }}>
               Already have an account?{" "}
-              <Link to="/signin" style={{ color: "#534AB7", fontWeight: 700, textDecoration: "none" }}>
+              <Link to="/signin" style={{ color: "#1B3F7A", fontWeight: 700, textDecoration: "none" }}>
                 Sign In
               </Link>
             </p>

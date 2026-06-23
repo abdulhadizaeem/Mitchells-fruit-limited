@@ -94,6 +94,14 @@ class OutboundCallingService:
             last_order=last_order,
             customer_type=customer_type,
         )
+        existing = await repo.get_contact_by_phone_in_campaign(
+            db, campaign_id, normalized
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This phone number is already in the campaign",
+            )
         return await repo.create_contact(
             db,
             campaign_id,
@@ -133,6 +141,11 @@ class OutboundCallingService:
                         customer_type=item.get("customer_type"),
                     )
                 )
+                dup = await repo.get_contact_by_phone_in_campaign(
+                    db, campaign_id, normalized
+                )
+                if dup:
+                    continue
                 contact = await repo.create_contact(
                     db,
                     campaign_id,

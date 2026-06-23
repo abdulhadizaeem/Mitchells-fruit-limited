@@ -92,6 +92,20 @@ async def delete_campaign(db: AsyncSession, campaign_id: str) -> bool:
     return True
 
 
+async def get_contact_by_phone_in_campaign(
+    db: AsyncSession,
+    campaign_id: str,
+    phone_number: str,
+) -> OutboundContact | None:
+    result = await db.execute(
+        select(OutboundContact).where(
+            OutboundContact.campaign_id == campaign_id,
+            OutboundContact.phone_number == phone_number,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 async def create_contact(
     db: AsyncSession,
     campaign_id: str,

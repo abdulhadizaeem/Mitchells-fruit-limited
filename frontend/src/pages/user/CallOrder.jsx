@@ -28,35 +28,8 @@ import {
 } from "lucide-react";
 import { getCallsApi, confirmCallOrderApi, getCategoriesApi, reprintOrderApi, cancelOrderApi, getSettingsApi } from "../../api/api";
 import toast from "react-hot-toast";
-const C = {
-  pageBg: "#F8F8FC",
-  topBar: "rgba(255,255,255,.98)",
-  filtersBar: "#FAFBFD",
-  card: "#ffffff",
-  panel: "#ffffff",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textGhost: "#C0C0D0",
-  border: "#EAEAF2",
-  borderFaint: "#F2F2F8",
-  inputBg: "#F4F4FA",
-  inputBorder: "#EAEAF2",
-  rowHover: "rgba(83,74,183,.04)",
-  purple: "#534AB7",
-  purpleText: "#534AB7",
-  purpleBg: "rgba(83,74,183,.08)",
-  purpleBdr: "rgba(83,74,183,.18)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,.08)",
-  greenBdr: "rgba(29,184,122,.2)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-  goldBdr: "rgba(200,151,58,.2)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  redBdr: "rgba(229,69,69,.2)"
-};
+import { C } from "../../theme/colors";
+
 function formatDuration(ms) {
   if (!ms || ms === 0) return "0s";
   const s = Math.floor(ms / 1e3);
@@ -1709,15 +1682,15 @@ function CallsOrders() {
         @keyframes fadeUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         @keyframes spin    { to{transform:rotate(360deg)} }
         .co-row            { transition: background .12s !important; }
-        .co-row:hover      { background: rgba(83,74,183,.04) !important; }
+        .co-row:hover      { background: rgba(27,63,122,.04) !important; }
         .co-btn:hover      { opacity:.7 !important; }
         .co-period         { transition: background .14s, color .14s, box-shadow .14s !important; }
         .co-period:hover   { background: rgba(0,0,0,.055) !important; }
         .co-chip           { transition: background .14s, color .14s, border-color .14s, box-shadow .14s !important; }
-        .co-chip:hover     { border-color: rgba(83,74,183,.35) !important; box-shadow: 0 2px 8px rgba(83,74,183,.10) !important; }
-        .co-search-wrap:focus-within { border-color: #7F77DD !important; box-shadow: 0 0 0 3px rgba(127,119,221,.13) !important; }
+        .co-chip:hover     { border-color: rgba(27,63,122,.35) !important; box-shadow: 0 2px 8px rgba(27,63,122,.10) !important; }
+        .co-search-wrap:focus-within { border-color: #2A5BA8 !important; box-shadow: 0 0 0 3px rgba(42,91,168,.13) !important; }
         .co-select         { transition: border-color .14s, box-shadow .14s !important; }
-        .co-select:focus   { border-color: #7F77DD !important; box-shadow: 0 0 0 3px rgba(127,119,221,.13) !important; }
+        .co-select:focus   { border-color: #2A5BA8 !important; box-shadow: 0 0 0 3px rgba(42,91,168,.13) !important; }
         *::-webkit-scrollbar       { width: 4px; height: 4px; }
         *::-webkit-scrollbar-track { background: transparent; }
         *::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 99px; }
@@ -1736,7 +1709,7 @@ function CallsOrders() {
     }}
   >
         
-        <div style={{ position: "absolute", top: -220, right: -160, width: 520, height: 520, background: "radial-gradient(circle,rgba(83,74,183,.06) 0%,transparent 66%)", borderRadius: "50%", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", top: -220, right: -160, width: 520, height: 520, background: "radial-gradient(circle,rgba(27,63,122,.06) 0%,transparent 66%)", borderRadius: "50%", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", bottom: -180, left: -140, width: 440, height: 440, background: "radial-gradient(circle,rgba(15,168,98,.04) 0%,transparent 66%)", borderRadius: "50%", pointerEvents: "none", zIndex: 0 }} />
 
         <div

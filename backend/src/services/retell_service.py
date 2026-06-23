@@ -61,7 +61,11 @@ async def create_phone_call(
     dynamic_variables: dict | None = None,
 ) -> dict:
     from_number = from_number or os.getenv("RETELL_PHONE_NUMBER", "")
-    agent_id = override_agent_id or os.getenv("RETELL_AGENT_ID", "")
+    agent_id = (
+        override_agent_id
+        or os.getenv("RETELL_OUTBOUND_AGENT_ID", "")
+        or os.getenv("RETELL_AGENT_ID", "")
+    )
     payload: dict = {
         "from_number": from_number,
         "to_number": to_number,

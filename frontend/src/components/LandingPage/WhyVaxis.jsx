@@ -8,8 +8,8 @@ function InfinityIcon() {
   return <svg viewBox="0 0 120 60" style={{ width: "88px", height: "44px", display: "block" }} aria-hidden="true">
       <defs>
         <linearGradient id="inf-g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7F77DD" />
-          <stop offset="100%" stopColor="#534AB7" />
+          <stop offset="0%" stopColor="#2A5BA8" />
+          <stop offset="100%" stopColor="#1B3F7A" />
         </linearGradient>
       </defs>
       <path
@@ -43,7 +43,7 @@ function PhoneMockup() {
 
       
       <div className="wv-phone-shell" style={{ width: "380px", background: "#0F0F1A", borderRadius: "44px", padding: "30px", boxShadow: "0 60px 120px rgba(15,15,26,.25),0 0 0 1px rgba(255,255,255,.04)", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", width: "200px", height: "200px", background: "radial-gradient(circle,rgba(127,119,221,.2) 0%,transparent 70%)", top: "-60px", right: "-60px", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", width: "200px", height: "200px", background: "radial-gradient(circle,rgba(42,91,168,.2) 0%,transparent 70%)", top: "-60px", right: "-60px", pointerEvents: "none" }} />
         <div style={{ width: "80px", height: "6px", background: "rgba(255,255,255,.12)", borderRadius: "3px", margin: "0 auto 20px" }} />
         <div style={{ fontSize: ".82rem", fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,.3)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px", fontFamily: "Sora,sans-serif" }}>
           <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1DB87A", animation: "ldot2 1.5s ease-in-out infinite" }} />
@@ -52,7 +52,7 @@ function PhoneMockup() {
 
         
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", padding: "11px 13px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)", borderRadius: "14px" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#7F77DD,#534AB7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".88rem", fontWeight: 700, color: "#fff", flexShrink: 0, fontFamily: "Sora,sans-serif" }}>JW</div>
+          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg,#2A5BA8,#1B3F7A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".88rem", fontWeight: 700, color: "#fff", flexShrink: 0, fontFamily: "Sora,sans-serif" }}>JW</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "rgba(255,255,255,.92)", fontFamily: "Sora,sans-serif" }}>James W.</div>
             <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "2px" }}>
@@ -65,7 +65,7 @@ function PhoneMockup() {
 
         
         <div style={{ display: "flex", alignItems: "center", gap: "3px", height: "50px", marginBottom: "18px" }}>
-          {[30, 16, 42, 22, 38, 10, 46, 26, 38, 14, 42, 18, 34, 12, 44, 24].map((h, i) => <div key={i} style={{ width: "4px", height: `${h}px`, borderRadius: "3px", background: i % 3 === 0 ? "#7F77DD" : i % 3 === 1 ? "#9490E0" : "rgba(127,119,221,.38)", animation: `phwave ${[1.1, 1.3, 0.9, 1.2, 1.4, 1, 1.15, 1.35, 0.95, 1.25, 1.05, 1.3, 0.85, 1.2, 1.4, 1.1][i]}s ease-in-out infinite`, animationDelay: `${[0, 0.12, 0.24, 0.06, 0.36, 0.18, 0.08, 0.3, 0.22, 0.14, 0.04, 0.28, 0.16, 0.34, 0.1, 0.26][i]}s`, transformOrigin: "center" }} />)}
+          {[30, 16, 42, 22, 38, 10, 46, 26, 38, 14, 42, 18, 34, 12, 44, 24].map((h, i) => <div key={i} style={{ width: "4px", height: `${h}px`, borderRadius: "3px", background: i % 3 === 0 ? "#2A5BA8" : i % 3 === 1 ? "#9490E0" : "rgba(42,91,168,.38)", animation: `phwave ${[1.1, 1.3, 0.9, 1.2, 1.4, 1, 1.15, 1.35, 0.95, 1.25, 1.05, 1.3, 0.85, 1.2, 1.4, 1.1][i]}s ease-in-out infinite`, animationDelay: `${[0, 0.12, 0.24, 0.06, 0.36, 0.18, 0.08, 0.3, 0.22, 0.14, 0.04, 0.28, 0.16, 0.34, 0.1, 0.26][i]}s`, transformOrigin: "center" }} />)}
         </div>
 
         
@@ -74,7 +74,7 @@ function PhoneMockup() {
     { cls: "c", text: "Yes \u2014 number eight, hot, for pickup." },
     { cls: "a", text: "Got it \u2014 #8, hot spice, pickup. Ready in 15 min!" },
     { cls: "c", text: "Perfect, thanks!" }
-  ].map((b, i) => <div key={i} style={{ padding: "12px 16px", borderRadius: b.cls === "a" ? "18px 18px 18px 4px" : "18px 18px 4px 18px", fontFamily: "Sora,sans-serif", fontSize: ".99rem", lineHeight: 1.6, marginBottom: "9px", animation: "bub .4s ease both", animationDelay: `${[1, 1.8, 2.6, 3.4][i]}s`, animationFillMode: "both", opacity: 0, ...b.cls === "a" ? { background: "rgba(127,119,221,.18)", border: "1px solid rgba(127,119,221,.25)", color: "rgba(255,255,255,.9)", maxWidth: "90%" } : { background: "linear-gradient(135deg,#7F77DD,#534AB7)", color: "#fff", maxWidth: "80%", marginLeft: "auto" } }}>
+  ].map((b, i) => <div key={i} style={{ padding: "12px 16px", borderRadius: b.cls === "a" ? "18px 18px 18px 4px" : "18px 18px 4px 18px", fontFamily: "Sora,sans-serif", fontSize: ".99rem", lineHeight: 1.6, marginBottom: "9px", animation: "bub .4s ease both", animationDelay: `${[1, 1.8, 2.6, 3.4][i]}s`, animationFillMode: "both", opacity: 0, ...b.cls === "a" ? { background: "rgba(42,91,168,.18)", border: "1px solid rgba(42,91,168,.25)", color: "rgba(255,255,255,.9)", maxWidth: "90%" } : { background: "linear-gradient(135deg,#2A5BA8,#1B3F7A)", color: "#fff", maxWidth: "80%", marginLeft: "auto" } }}>
             {b.text}
           </div>)}
 
@@ -94,8 +94,8 @@ function PhoneMockup() {
           <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: "#1DB87A", marginRight: "6px", flexShrink: 0 }} />
           Order sent to kitchen
         </div>
-        <div style={chipStyle("#7F77DD", "-1.5s", "4s")}>
-          <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: "#7F77DD", marginRight: "6px", flexShrink: 0 }} />
+        <div style={chipStyle("#2A5BA8", "-1.5s", "4s")}>
+          <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: "#2A5BA8", marginRight: "6px", flexShrink: 0 }} />
           Caller recognized — James W.
         </div>
         <div style={chipStyle("#C8973A", "-2.5s", "3.8s")}>
@@ -129,7 +129,7 @@ function WhyMitchellsSection() {
         .sr-el.sr-up{opacity:1;transform:none}
         .ws-item{padding:28px 0;border-bottom:1px solid #EAEAF2;display:flex;align-items:flex-start;gap:22px;}
         .ws-item:first-child{padding-top:0;}.ws-item:last-child{border-bottom:none;}
-        .ws-num{font-size:4.8rem;font-weight:900;letter-spacing:-.05em;line-height:1;width:160px;flex-shrink:0;color:#534AB7;}
+        .ws-num{font-size:4.8rem;font-weight:900;letter-spacing:-.05em;line-height:1;width:160px;flex-shrink:0;color:#1B3F7A;}
 
         @media (max-width: 1023px) {
           .why-section { padding: 80px 40px !important; }
@@ -152,7 +152,7 @@ function WhyMitchellsSection() {
         <div style={{ maxWidth: "1120px", margin: "0 auto" }}>
           <div className="why-grid">
             <div>
-              <div className="sr-el" style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#7F77DD", marginBottom: "14px", fontFamily: "Sora,sans-serif" }}>Why Mitchells</div>
+              <div className="sr-el" style={{ fontSize: ".79rem", fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#2A5BA8", marginBottom: "14px", fontFamily: "Sora,sans-serif" }}>Why Mitchells</div>
               <h2 className="sr-el" style={{ fontFamily: "Sora,sans-serif", fontSize: "clamp(2.5rem,4.4vw,4rem)", fontWeight: 800, lineHeight: 1.06, letterSpacing: "-.03em", color: "#0F0F1A", marginBottom: "40px" }}>
                 Your phone is costing<br />you <em style={{ fontFamily: "Lora,serif", fontStyle: "italic", fontWeight: 600 }}>real money.</em>
               </h2>

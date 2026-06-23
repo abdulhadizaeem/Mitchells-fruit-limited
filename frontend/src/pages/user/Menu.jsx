@@ -15,34 +15,7 @@ import {
   updateSpecialApi
 } from "../../api/api";
 import { Copy, Eye, LayoutList, Pencil, RefreshCw, Search, Tag, Trash, ChevronRight } from "lucide-react";
-const C = {
-  pageBg: "#F8F8FC",
-  topBar: "rgba(255,255,255,.98)",
-  card: "#ffffff",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textGhost: "#C0C0D0",
-  border: "#EAEAF2",
-  borderFaint: "#F2F2F8",
-  inputBg: "#F4F4FA",
-  inputBorder: "#EAEAF2",
-  rowHover: "rgba(83,74,183,.04)",
-  purple: "#534AB7",
-  purpleText: "#534AB7",
-  purpleBg: "rgba(83,74,183,.08)",
-  purpleBdr: "rgba(83,74,183,.18)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,.08)",
-  greenBdr: "rgba(29,184,122,.2)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-  goldBdr: "rgba(200,151,58,.2)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  redBdr: "rgba(229,69,69,.2)",
-  filtersBar: "#FAFBFD"
-};
+import { C } from "../../theme/colors";
 const Spinner = () => <svg style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} fill="none" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }} />
     <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" style={{ opacity: 0.75 }} />
@@ -534,7 +507,7 @@ function PreviewModal({
       transition: "box-shadow .15s, border-color .15s, transform .15s"
     }}
     onMouseEnter={(e) => {
-      e.currentTarget.style.boxShadow = "0 6px 20px rgba(83,74,183,.14)";
+      e.currentTarget.style.boxShadow = "0 6px 20px rgba(27,63,122,.14)";
       e.currentTarget.style.borderColor = C.purpleBdr;
       e.currentTarget.style.transform = "translateY(-1px)";
     }}
@@ -1024,7 +997,7 @@ function Menu() {
         .mn-row.mn-row-off { background:rgba(217,65,64,.018); }
         .mn-row.mn-row-off:hover { background:rgba(217,65,64,.036); }
         .mn-row.mn-row-sel { background:${C.purpleBg}; }
-        .mn-row.mn-row-sel:hover { background:rgba(83,74,183,.13); }
+        .mn-row.mn-row-sel:hover { background:rgba(27,63,122,.13); }
         .mn-cb { width:15px; height:15px; accent-color:${C.purple}; cursor:pointer; flex-shrink:0; margin:0; }
         .mn-action-btn { background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:5px; border-radius:6px; color:${C.textMuted}; transition:color .12s, background .12s; }
         .mn-action-btn:hover { color:${C.purple}; background:${C.purpleBg}; }
@@ -1217,7 +1190,7 @@ function Menu() {
     >
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span className="mn-cat-sidebar-name">{cat.name}</span>
-                            {catTotal > 0 && <div style={{ height: 3, borderRadius: 2, background: isActive ? "rgba(83,74,183,.18)" : C.borderFaint, marginTop: 5, overflow: "hidden" }}>
+                            {catTotal > 0 && <div style={{ height: 3, borderRadius: 2, background: isActive ? "rgba(27,63,122,.18)" : C.borderFaint, marginTop: 5, overflow: "hidden" }}>
                                 <div style={{ height: "100%", width: `${availPct * 100}%`, borderRadius: 2, background: isActive ? C.purple : barColor, transition: "width .35s ease" }} />
                               </div>}
                           </div>

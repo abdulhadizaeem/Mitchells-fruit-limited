@@ -1,19 +1,84 @@
-export const C = {
-  pageBg: "#F8F8FC",
-  card: "#ffffff",
-  border: "#EAEAF2",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  purple: "#534AB7",
-  purpleBg: "rgba(83,74,183,.08)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,.08)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-};
+import { Loader2 } from "lucide-react";
+import { C, BRAND } from "../../theme/colors";
+
+export { C, BRAND };
+
+export const spinStyle = { animation: "spin 1s linear infinite" };
+
+export function Btn({
+  children,
+  variant = "primary",
+  loading = false,
+  disabled = false,
+  style,
+  type = "button",
+  ...props
+}) {
+  const variants = {
+    primary: {
+      background: C.purple,
+      color: "#fff",
+      border: "none",
+      padding: "8px 14px",
+    },
+    secondary: {
+      background: C.card,
+      color: C.textSub,
+      border: `1px solid ${C.border}`,
+      padding: "8px 14px",
+    },
+    success: {
+      background: C.green,
+      color: "#fff",
+      border: "none",
+      padding: "8px 16px",
+    },
+    ghost: {
+      background: "none",
+      color: C.textMuted,
+      border: "none",
+      padding: 8,
+    },
+    danger: {
+      background: "none",
+      color: C.red,
+      border: "none",
+      padding: 4,
+    },
+    link: {
+      background: C.purpleBg,
+      color: C.purple,
+      border: "none",
+      padding: "5px 10px",
+      fontSize: ".75rem",
+    },
+  };
+  const v = variants[variant] || variants.primary;
+  return (
+    <button
+      type={type}
+      disabled={disabled || loading}
+      {...props}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        borderRadius: 10,
+        fontWeight: 700,
+        fontSize: ".8rem",
+        fontFamily: "'Sora', sans-serif",
+        cursor: disabled || loading ? "not-allowed" : "pointer",
+        opacity: disabled || loading ? 0.65 : 1,
+        ...v,
+        ...style,
+      }}
+    >
+      {loading && <Loader2 size={14} style={spinStyle} />}
+      {children}
+    </button>
+  );
+}
 
 export function formatDuration(ms) {
   if (!ms) return "—";

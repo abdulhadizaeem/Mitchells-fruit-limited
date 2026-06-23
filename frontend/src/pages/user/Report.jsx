@@ -12,31 +12,8 @@ import {
   Store
 } from "lucide-react";
 import { getReportApi } from "../../api/api";
-const C = {
-  pageBg: "#F8F8FC",
-  card: "#ffffff",
-  topBar: "rgba(255,255,255,.98)",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textGhost: "#C0C0D0",
-  border: "#EAEAF2",
-  borderFaint: "#F2F2F8",
-  inputBg: "#F4F4FA",
-  purple: "#534AB7",
-  purpleText: "#534AB7",
-  purpleBg: "rgba(83,74,183,.08)",
-  purpleBdr: "rgba(83,74,183,.18)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,.08)",
-  greenBdr: "rgba(29,184,122,.2)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-  goldBdr: "rgba(200,151,58,.2)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  redBdr: "rgba(229,69,69,.2)"
-};
+import { C } from "../../theme/colors";
+
 function KpiCard({
   label,
   value,

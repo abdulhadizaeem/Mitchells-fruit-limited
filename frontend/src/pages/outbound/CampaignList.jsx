@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Trash2, Pencil, Loader2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
@@ -8,30 +8,40 @@ import {
   deleteOutboundCampaignApi,
   updateOutboundCampaignApi,
 } from "../../api/api";
-import { C, StatusBadge } from "./outboundStyles";
+import { C, StatusBadge, Btn, spinStyle } from "./outboundStyles";
 
 export default function CampaignList() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({ name: "", description: "" });
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const fetchLock = useRef(false);
 
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true);
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const fetchCampaigns = useCallback(async (silent = false) => {
+    if (fetchLock.current) return;
+    fetchLock.current = true;
     try {
-      setCampaigns(await getOutboundCampaignsApi(0, 100, search));
+      setCampaigns(await getOutboundCampaignsApi(0, 100, search || undefined));
     } catch {
-      toast.error("Failed to load campaigns");
+      if (!silent) toast.error("Failed to load campaigns");
     } finally {
-      setLoading(false);
+      fetchLock.current = false;
+      setInitialLoading(false);
     }
   }, [search]);
 
   useEffect(() => {
-    fetchCampaigns();
+    fetchCampaigns(false);
   }, [fetchCampaigns]);
 
   const openCreate = () => {
@@ -39,12 +49,15 @@ export default function CampaignList() {
     setModal("create");
   };
 
-  const openEdit = (c) => {
+  const openEdit = (c, e) => {
+    e.stopPropagation();
     setForm({ name: c.name, description: c.description || "" });
     setModal(c.id);
   };
 
-  const save = async () => {
+  const save = async (e) => {
+    e?.preventDefault?.();
+    if (saving) return;
     if (!form.name.trim()) {
       toast.error("Name is required");
       return;
@@ -59,7 +72,7 @@ export default function CampaignList() {
         toast.success("Campaign updated");
       }
       setModal(null);
-      fetchCampaigns();
+      await fetchCampaigns(true);
     } catch {
       toast.error("Save failed");
     } finally {
@@ -67,59 +80,54 @@ export default function CampaignList() {
     }
   };
 
-  const remove = async (id) => {
-    if (!confirm("Delete this campaign?")) return;
+  const remove = async (id, e) => {
+    e.stopPropagation();
+    if (deletingId) return;
+    if (!window.confirm("Delete this campaign?")) return;
+    setDeletingId(id);
     try {
       await deleteOutboundCampaignApi(id);
       toast.success("Campaign deleted");
-      fetchCampaigns();
+      await fetchCampaigns(true);
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   return (
     <div style={{ background: C.pageBg, minHeight: "100vh", padding: "24px 28px" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button
-          onClick={() => navigate("/dashboard/calling/outbound")}
-          style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted }}
-        >
+        <Btn variant="ghost" onClick={() => navigate("/dashboard/calling/outbound")}>
           <ArrowLeft size={18} />
-        </button>
+        </Btn>
         <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: C.text }}>
           Campaigns
         </h1>
         <div style={{ flex: 1 }} />
-        <button
-          onClick={openCreate}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: C.purple,
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "8px 14px",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: ".8rem",
-          }}
-        >
+        <Btn variant="primary" onClick={openCreate}>
           <Plus size={14} />
           Create
-        </button>
+        </Btn>
       </div>
 
       <div style={{ marginBottom: 16, position: "relative", maxWidth: 320 }}>
         <Search
           size={14}
-          style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted }}
+          style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: C.textMuted,
+            pointerEvents: "none",
+          }}
         />
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search campaigns..."
           style={{
             width: "100%",
@@ -140,9 +148,9 @@ export default function CampaignList() {
           overflow: "hidden",
         }}
       >
-        {loading ? (
+        {initialLoading ? (
           <div style={{ padding: 40, textAlign: "center" }}>
-            <Loader2 size={24} style={{ animation: "spin 1s linear infinite" }} />
+            <Loader2 size={24} style={spinStyle} />
           </div>
         ) : campaigns.length === 0 ? (
           <div style={{ padding: 40, textAlign: "center", color: C.textMuted }}>
@@ -185,22 +193,22 @@ export default function CampaignList() {
                   <td style={{ padding: "12px 16px", color: C.textMuted }}>
                     {new Date(c.created_at).toLocaleDateString()}
                   </td>
-                  <td
-                    style={{ padding: "12px 16px" }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => openEdit(c)}
-                      style={{ background: "none", border: "none", cursor: "pointer", marginRight: 8, color: C.purple }}
+                  <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
+                    <Btn
+                      variant="ghost"
+                      style={{ color: C.purple, marginRight: 4, padding: 4 }}
+                      onClick={(e) => openEdit(c, e)}
                     >
                       <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => remove(c.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: C.red }}
+                    </Btn>
+                    <Btn
+                      variant="danger"
+                      loading={deletingId === c.id}
+                      disabled={!!deletingId}
+                      onClick={(e) => remove(c.id, e)}
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </Btn>
                   </td>
                 </tr>
               ))}
@@ -218,9 +226,11 @@ export default function CampaignList() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 100,
+            zIndex: 1000,
           }}
-          onClick={() => setModal(null)}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !saving) setModal(null);
+          }}
         >
           <div
             style={{
@@ -230,63 +240,54 @@ export default function CampaignList() {
               width: 400,
               maxWidth: "90vw",
             }}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: "0 0 16px", fontWeight: 800 }}>
               {modal === "create" ? "New Campaign" : "Edit Campaign"}
             </h3>
-            <input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Campaign name"
-              style={{
-                width: "100%",
-                padding: 10,
-                borderRadius: 10,
-                border: `1px solid ${C.border}`,
-                marginBottom: 10,
-                boxSizing: "border-box",
-              }}
-            />
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Description"
-              rows={3}
-              style={{
-                width: "100%",
-                padding: 10,
-                borderRadius: 10,
-                border: `1px solid ${C.border}`,
-                marginBottom: 16,
-                boxSizing: "border-box",
-                resize: "vertical",
-              }}
-            />
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setModal(null)} style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button
-                onClick={save}
+            <form onSubmit={save}>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Campaign name"
                 disabled={saving}
                 style={{
-                  padding: "8px 16px",
+                  width: "100%",
+                  padding: 10,
                   borderRadius: 10,
-                  border: "none",
-                  background: C.purple,
-                  color: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
+                  border: `1px solid ${C.border}`,
+                  marginBottom: 10,
+                  boxSizing: "border-box",
                 }}
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
+              />
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Description"
+                rows={3}
+                disabled={saving}
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  borderRadius: 10,
+                  border: `1px solid ${C.border}`,
+                  marginBottom: 16,
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                }}
+              />
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Btn variant="secondary" disabled={saving} onClick={() => setModal(null)}>
+                  Cancel
+                </Btn>
+                <Btn type="submit" variant="primary" loading={saving}>
+                  {saving ? "Saving…" : "Save"}
+                </Btn>
+              </div>
+            </form>
           </div>
         </div>
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

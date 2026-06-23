@@ -26,22 +26,8 @@ import {
   updateSettingsApi,
   getDashboardStatsApi
 } from "../api/api";
-const C = {
-  white: "#FFFFFF",
-  bg: "#F8F8FC",
-  purple: "#534AB7",
-  purpleAlt: "#7F77DD",
-  purpleLight: "rgba(83,74,183,0.08)",
-  green: "#1DB87A",
-  greenLight: "rgba(29,184,122,0.09)",
-  red: "#E54545",
-  border: "#EAEAF2",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textLight: "#C0C0D0",
-  font: "'Sora', sans-serif"
-};
+import { C, BRAND } from "../theme/colors";
+
 const SIDEBAR_CSS = `
   @keyframes vxDropIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
   @keyframes ldot     { 0%,100%{box-shadow:0 0 0 0 rgba(29,184,122,.5)} 50%{box-shadow:0 0 0 5px rgba(29,184,122,0)} }
@@ -119,7 +105,7 @@ function Avatar({ initial, size = 28 }) {
     height: size,
     borderRadius: "50%",
     flexShrink: 0,
-    background: "linear-gradient(135deg,#534AB7,#7F77DD)",
+    background: `linear-gradient(135deg,${BRAND.blue},${BRAND.gold})`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

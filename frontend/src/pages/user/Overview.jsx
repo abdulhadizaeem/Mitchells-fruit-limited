@@ -26,31 +26,7 @@ import {
   updateSettingsApi,
   getMenuPreviewApi,
 } from "../../api/api";
-const C = {
-  pageBg: "#F8F8FC",
-  topBar: "rgba(255,255,255,.98)",
-  card: "#ffffff",
-  border: "#EAEAF2",
-  borderFaint: "#F2F2F8",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textGhost: "#C0C0D0",
-  inputBg: "#F4F4FA",
-  purple: "#534AB7",
-  purpleText: "#534AB7",
-  purpleBg: "rgba(83,74,183,.08)",
-  purpleBdr: "rgba(83,74,183,.18)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,.08)",
-  greenBdr: "rgba(29,184,122,.2)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,.08)",
-  goldBdr: "rgba(200,151,58,.2)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,.08)",
-  redBdr: "rgba(229,69,69,.2)",
-};
+import { C } from "../../theme/colors";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -286,9 +262,9 @@ export default function Overview() {
         .vx-row:hover     { background: rgba(0,0,0,.025) !important; }
         .vx-btn:hover     { opacity:.7 !important; }
         .vx-qa            { transition: border-color .18s, background .18s, transform .18s, box-shadow .18s !important; }
-        .vx-qa:hover      { border-color: rgba(83,74,183,.3) !important; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(83,74,183,.10) !important; }
+        .vx-qa:hover      { border-color: rgba(27,63,122,.3) !important; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(27,63,122,.10) !important; }
         .vx-card          { transition: border-color .18s, box-shadow .18s !important; }
-        .vx-card:hover    { border-color: rgba(83,74,183,.22) !important; box-shadow: 0 4px 20px rgba(83,74,183,.08) !important; }
+        .vx-card:hover    { border-color: rgba(27,63,122,.22) !important; box-shadow: 0 4px 20px rgba(27,63,122,.08) !important; }
         .vx-period        { transition: background .14s, color .14s, box-shadow .14s !important; }
         .vx-period:hover  { background: rgba(255,255,255,.7) !important; }
         *::-webkit-scrollbar       { width: 4px; }
@@ -309,9 +285,9 @@ export default function Overview() {
         }}
       >
 
-        <div style={{ position: "absolute", top: -260, right: -200, width: 660, height: 660, background: "radial-gradient(circle,rgba(83,74,183,.06) 0%,transparent 66%)", borderRadius: "50%", animation: "vxOrb 18s ease-in-out infinite", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", top: -260, right: -200, width: 660, height: 660, background: "radial-gradient(circle,rgba(27,63,122,.06) 0%,transparent 66%)", borderRadius: "50%", animation: "vxOrb 18s ease-in-out infinite", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", bottom: -220, left: -180, width: 560, height: 560, background: "radial-gradient(circle,rgba(29,184,122,.04) 0%,transparent 66%)", borderRadius: "50%", animation: "vxOrb 22s ease-in-out infinite reverse", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", top: "38%", left: "48%", width: 380, height: 380, background: "radial-gradient(circle,rgba(83,74,183,.03) 0%,transparent 70%)", borderRadius: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", top: "38%", left: "48%", width: 380, height: 380, background: "radial-gradient(circle,rgba(27,63,122,.03) 0%,transparent 70%)", borderRadius: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none", zIndex: 0 }} />
 
         <div
           style={{
@@ -474,7 +450,7 @@ export default function Overview() {
                   sub: "Manage stock and product catalog",
                   icon: <ShoppingBag size={16} />,
                   accent: C.purple,
-                  rawAccent: "#534AB7",
+                  rawAccent: "#1B3F7A",
                   path: "/dashboard/menu",
                 },
                 {
@@ -615,9 +591,9 @@ export default function Overview() {
                   sub: periodLabel,
                   icon: <ShoppingBag size={14} />,
                   accent: C.purple,
-                  rawAccent: "#534AB7",
-                  iconBg: "rgba(83,74,183,.1)",
-                  iconBorder: "rgba(83,74,183,.2)",
+                  rawAccent: "#1B3F7A",
+                  iconBg: "rgba(27,63,122,.1)",
+                  iconBorder: "rgba(27,63,122,.2)",
                   topLine: C.purple,
                 },
                 {

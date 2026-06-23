@@ -35,31 +35,14 @@ import {
   activatePromptApi,
   deletePromptApi
 } from "../../api/api";
+import { C as themeC } from "../../theme/colors";
+
 const C = {
-  bg: "#F8F8FC",
-  white: "#FFFFFF",
-  purple: "#534AB7",
-  purpleAlt: "#7F77DD",
-  purpleLight: "rgba(127,119,221,0.10)",
+  ...themeC,
   purpleBg: "#F0EFFC",
-  purpleRing: "rgba(127,119,221,0.14)",
-  green: "#1DB87A",
-  greenBg: "rgba(29,184,122,0.09)",
-  greenBdr: "rgba(29,184,122,0.22)",
-  gold: "#C8973A",
-  goldBg: "rgba(200,151,58,0.09)",
-  goldBdr: "rgba(200,151,58,0.22)",
-  red: "#E54545",
-  redBg: "rgba(229,69,69,0.07)",
-  redBdr: "rgba(229,69,69,0.20)",
-  border: "#EAEAF2",
-  borderFaint: "#F2F2F8",
-  text: "#0F0F1A",
-  textSub: "#525270",
-  textMuted: "#8888A8",
-  textLight: "#C0C0D0",
-  font: "'Sora', sans-serif"
+  purpleRing: "rgba(42,91,168,0.14)",
 };
+
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const PAKISTAN_TIMEZONES = [
@@ -137,20 +120,20 @@ const CSS = `
   .vx-st input[type="range"]::-webkit-slider-runnable-track { height:6px; border-radius:6px; background:${C.border}; }
   .vx-st input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
-    background:${C.purple}; border:2.5px solid #fff; box-shadow:0 1px 6px rgba(83,74,183,.38); margin-top:-6px; cursor:pointer;
+    background:${C.purple}; border:2.5px solid #fff; box-shadow:0 1px 6px rgba(27,63,122,.38); margin-top:-6px; cursor:pointer;
   }
 
   .vx-iw { position:relative; display:flex; align-items:center; }
   .vx-iw svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:${C.textMuted}; z-index:1; flex-shrink:0; }
   .vx-iw input, .vx-iw select { padding-left:36px !important; }
 
-  .vx-save:hover:not(:disabled) { filter:brightness(1.09); transform:translateY(-1px); box-shadow:0 8px 26px rgba(83,74,183,.38) !important; }
+  .vx-save:hover:not(:disabled) { filter:brightness(1.09); transform:translateY(-1px); box-shadow:0 8px 26px rgba(27,63,122,.38) !important; }
   .vx-save:disabled { opacity:.45; cursor:not-allowed; }
 
   .vx-card { transition:box-shadow .2s; }
   .vx-card:hover { box-shadow:0 4px 22px rgba(15,15,26,.07) !important; }
 
-  .vx-vc:hover { border-color:${C.purpleAlt} !important; background:rgba(127,119,221,.03) !important; }
+  .vx-vc:hover { border-color:${C.purpleAlt} !important; background:rgba(42,91,168,.03) !important; }
 
   .vx-nav-item {
     display:inline-flex; align-items:center; gap:7px;
@@ -160,8 +143,8 @@ const CSS = `
     transition:border-color .14s, background .14s;
     position:relative; margin-bottom:-1.5px;
   }
-  .vx-nav-item:hover:not(.vx-nav-on) { background:rgba(83,74,183,.045); }
-  .vx-nav-on { border-bottom-color:${C.purple} !important; background:rgba(83,74,183,.04) !important; }
+  .vx-nav-item:hover:not(.vx-nav-on) { background:rgba(27,63,122,.045); }
+  .vx-nav-on { border-bottom-color:${C.purple} !important; background:rgba(27,63,122,.04) !important; }
   .vx-nav-icon {
     width:20px; height:20px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
@@ -260,7 +243,7 @@ function PlannedBadge() {
     </span>;
 }
 function InfoNote({ children }) {
-  return <div style={{ display: "flex", gap: 9, padding: "11px 13px", borderRadius: 9, background: "rgba(83,74,183,.05)", border: `1px solid rgba(127,119,221,.14)` }}>
+  return <div style={{ display: "flex", gap: 9, padding: "11px 13px", borderRadius: 9, background: "rgba(27,63,122,.05)", border: `1px solid rgba(42,91,168,.14)` }}>
       <Info size={12} style={{ color: C.purpleAlt, flexShrink: 0, marginTop: 1 }} />
       <p style={{ margin: 0, fontFamily: C.font, fontSize: ".73rem", color: C.textSub, lineHeight: 1.58 }}>{children}</p>
     </div>;
@@ -384,7 +367,7 @@ function Slider({ label, sublabel, icon, value, min = 0, max = 1, step = 0.05, o
     borderRadius: "50%",
     background: C.purple,
     border: "2.5px solid #fff",
-    boxShadow: "0 1px 5px rgba(83,74,183,.4)",
+    boxShadow: "0 1px 5px rgba(27,63,122,.4)",
     left: `calc(${pct}% - 8.5px)`,
     pointerEvents: "none"
   }} />
@@ -418,7 +401,7 @@ function VoiceCard({ voice, selected, onSelect }) {
     borderRadius: 10,
     cursor: "pointer",
     border: `1.5px solid ${selected ? C.purple : C.border}`,
-    background: selected ? "rgba(83,74,183,.05)" : C.white,
+    background: selected ? "rgba(27,63,122,.05)" : C.white,
     transition: "border-color .15s, background .15s",
     position: "relative"
   }}>
@@ -574,7 +557,7 @@ function KnowledgeBase() {
       flexDirection: "column",
       alignItems: "center",
       gap: 9,
-      background: drag ? "rgba(83,74,183,.04)" : C.bg,
+      background: drag ? "rgba(27,63,122,.04)" : C.bg,
       cursor: "pointer",
       transition: "border-color .15s, background .15s"
     }}
@@ -872,7 +855,7 @@ function SettingsPage() {
     title="Voice"
     subtitle="Choose the voice your callers hear — preview before selecting"
     icon={<Mic size={14} />}
-    action={activeVoiceName ? <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 100, background: "linear-gradient(135deg,#534AB7,#7F77DD)", flexShrink: 0 }}>
+    action={activeVoiceName ? <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 100, background: "linear-gradient(135deg,#1B3F7A,#2A5BA8)", flexShrink: 0 }}>
               <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,.25)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: C.font, fontSize: ".62rem", fontWeight: 800, color: "#fff" }}>{activeVoiceName[0]}</div>
               <span style={{ fontFamily: C.font, fontSize: ".71rem", fontWeight: 700, color: "#fff" }}>{activeVoiceName}</span>
             </div> : void 0}
@@ -964,14 +947,14 @@ function SettingsPage() {
           fontFamily: C.font,
           fontSize: ".73rem",
           fontWeight: 700,
-          background: "linear-gradient(135deg,#534AB7,#7F77DD)",
+          background: "linear-gradient(135deg,#1B3F7A,#2A5BA8)",
           color: "#fff",
           border: "none",
           borderRadius: 8,
           padding: "7px 13px",
           cursor: isCreatingPrompt ? "not-allowed" : "pointer",
           opacity: isCreatingPrompt ? 0.5 : 1,
-          boxShadow: "0 2px 10px rgba(83,74,183,.2)",
+          boxShadow: "0 2px 10px rgba(27,63,122,.2)",
           flexShrink: 0
         }}
       >
@@ -979,7 +962,7 @@ function SettingsPage() {
               </button>}
     />
 
-          {isCreatingPrompt && <div style={{ padding: "18px 20px", borderBottom: `1px solid ${C.border}`, background: "rgba(83,74,183,.03)", display: "flex", flexDirection: "column", gap: 13, animation: "fadeUp .2s ease both" }}>
+          {isCreatingPrompt && <div style={{ padding: "18px 20px", borderBottom: `1px solid ${C.border}`, background: "rgba(27,63,122,.03)", display: "flex", flexDirection: "column", gap: 13, animation: "fadeUp .2s ease both" }}>
               <p style={{ margin: 0, fontFamily: C.font, fontSize: ".82rem", fontWeight: 800, color: C.purple }}>New Prompt</p>
               <Field label="Title">
                 <input autoFocus type="text" value={newPromptName} onChange={(e) => setNewPromptName(e.target.value)} placeholder="e.g. Weekend Script, Upsell Mode…" />
@@ -991,7 +974,7 @@ function SettingsPage() {
                 <button onClick={() => setIsCreatingPrompt(false)} style={{ flex: 1, fontFamily: C.font, fontSize: ".79rem", fontWeight: 600, color: C.textSub, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "9px 0", cursor: "pointer" }}>
                   Cancel
                 </button>
-                <button onClick={handleCreatePrompt} disabled={promptSaving} style={{ flex: 2, fontFamily: C.font, fontSize: ".79rem", fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#534AB7,#7F77DD)", border: "none", borderRadius: 8, padding: "9px 0", cursor: promptSaving ? "not-allowed" : "pointer", opacity: promptSaving ? 0.6 : 1, boxShadow: "0 3px 12px rgba(83,74,183,.22)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <button onClick={handleCreatePrompt} disabled={promptSaving} style={{ flex: 2, fontFamily: C.font, fontSize: ".79rem", fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#1B3F7A,#2A5BA8)", border: "none", borderRadius: 8, padding: "9px 0", cursor: promptSaving ? "not-allowed" : "pointer", opacity: promptSaving ? 0.6 : 1, boxShadow: "0 3px 12px rgba(27,63,122,.22)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                   {promptSaving ? <Spinner /> : <><Save size={11} /> Create Prompt</>}
                 </button>
               </div>
@@ -1107,7 +1090,7 @@ function SettingsPage() {
       />
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => setEditingPromptId(null)} style={{ flex: 1, fontFamily: C.font, fontSize: ".77rem", fontWeight: 600, color: C.textSub, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 7, padding: "8px 0", cursor: "pointer" }}>Cancel</button>
-                        <button onClick={() => handleSaveEdit(p.id)} disabled={promptSaving} style={{ flex: 2, fontFamily: C.font, fontSize: ".77rem", fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#534AB7,#7F77DD)", border: "none", borderRadius: 7, padding: "8px 0", cursor: promptSaving ? "not-allowed" : "pointer", opacity: promptSaving ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                        <button onClick={() => handleSaveEdit(p.id)} disabled={promptSaving} style={{ flex: 2, fontFamily: C.font, fontSize: ".77rem", fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#1B3F7A,#2A5BA8)", border: "none", borderRadius: 7, padding: "8px 0", cursor: promptSaving ? "not-allowed" : "pointer", opacity: promptSaving ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                           {promptSaving ? <Spinner /> : <><Check size={11} /> Save Changes</>}
                         </button>
                       </div>
@@ -1128,8 +1111,8 @@ function SettingsPage() {
           <div style={{
     padding: "16px 18px",
     borderRadius: 12,
-    background: assignedNumber ? "linear-gradient(135deg,rgba(83,74,183,.07),rgba(127,119,221,.03))" : C.bg,
-    border: `1.5px solid ${assignedNumber ? "rgba(127,119,221,.22)" : C.border}`,
+    background: assignedNumber ? "linear-gradient(135deg,rgba(27,63,122,.07),rgba(42,91,168,.03))" : C.bg,
+    border: `1.5px solid ${assignedNumber ? "rgba(42,91,168,.22)" : C.border}`,
     display: "flex",
     alignItems: "center",
     gap: 13,
@@ -1191,8 +1174,8 @@ function SettingsPage() {
     padding: "14px 18px",
     borderRadius: 12,
     animation: "fadeUp .3s ease both",
-    background: "linear-gradient(135deg,rgba(83,74,183,.07),rgba(127,119,221,.03))",
-    border: `1px solid rgba(127,119,221,.16)`,
+    background: "linear-gradient(135deg,rgba(27,63,122,.07),rgba(42,91,168,.03))",
+    border: `1px solid rgba(42,91,168,.16)`,
     display: "flex",
     alignItems: "center",
     gap: 12,
@@ -1245,7 +1228,7 @@ function SettingsPage() {
 
       <div className="vx-topbar" style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 20px", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg,#534AB7,#7F77DD)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg,#1B3F7A,#2A5BA8)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Store size={14} style={{ color: "#fff" }} />
           </div>
           <span style={{ fontFamily: C.font, fontSize: ".88rem", fontWeight: 800, color: C.text, letterSpacing: "-.02em", whiteSpace: "nowrap" }}>Settings</span>
@@ -1289,13 +1272,13 @@ function SettingsPage() {
       fontFamily: C.font,
       fontSize: ".79rem",
       fontWeight: 700,
-      background: dirty ? "linear-gradient(135deg,#534AB7,#7F77DD)" : C.border,
+      background: dirty ? "linear-gradient(135deg,#1B3F7A,#2A5BA8)" : C.border,
       color: dirty ? "#fff" : C.textMuted,
       border: "none",
       borderRadius: 8,
       padding: "8px 15px",
       cursor: dirty ? "pointer" : "not-allowed",
-      boxShadow: dirty ? "0 3px 14px rgba(83,74,183,.26)" : "none",
+      boxShadow: dirty ? "0 3px 14px rgba(27,63,122,.26)" : "none",
       transition: "filter .18s, transform .18s, box-shadow .18s",
       whiteSpace: "nowrap"
     }}

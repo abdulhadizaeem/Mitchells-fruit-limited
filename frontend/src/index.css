@@ -23,10 +23,15 @@ html, body {
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --vx-purple:      #7F77DD;
-  --vx-purple-dark: #534AB7;
-  --vx-green:       #1DB87A;
+  --vx-purple:      #2A5BA8;
+  --vx-purple-dark: #1B3F7A;
+  --vx-blue:        #1B3F7A;
+  --vx-blue-dark:   #0F2847;
+  --vx-blue-light:  #2A5BA8;
+  --vx-green:       #1B7A4E;
   --vx-gold:        #C8973A;
+  --vx-gold-light:  #E8C56A;
+  --vx-cream:       #FFF9F0;
   --vx-text:        #0F0F1A;
   --vx-text-muted:  #525270;
   --vx-text-light:  #8888A8;

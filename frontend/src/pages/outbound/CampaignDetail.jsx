@@ -19,18 +19,23 @@ import {
   importOutboundContactsApi,
   startOutboundCampaignApi,
 } from "../../api/api";
-import { C, StatusBadge } from "./outboundStyles";
+import { C, StatusBadge, Btn, spinStyle } from "./outboundStyles";
 
 export default function CampaignDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const fileRef = useRef(null);
+  const fetchLock = useRef(false);
   const [campaign, setCampaign] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
   const [form, setForm] = useState({
     name: "",
     phone_number: "",
@@ -38,7 +43,10 @@ export default function CampaignDetail() {
     company: "",
   });
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (silent = false) => {
+    if (fetchLock.current) return;
+    fetchLock.current = true;
+    if (!silent) setRefreshing(true);
     try {
       const [c, ct, st] = await Promise.all([
         getOutboundCampaignApi(id),
@@ -49,75 +57,96 @@ export default function CampaignDetail() {
       setContacts(ct);
       setStats(st);
     } catch {
-      toast.error("Failed to load campaign");
+      if (!silent) toast.error("Failed to load campaign");
     } finally {
-      setLoading(false);
+      fetchLock.current = false;
+      setInitialLoading(false);
+      setRefreshing(false);
     }
   }, [id]);
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 10000);
-    return () => clearInterval(interval);
+    fetchAll(false);
   }, [fetchAll]);
 
-  const addContact = async () => {
+  useEffect(() => {
+    if (showAdd || savingContact || starting) return undefined;
+    const interval = setInterval(() => fetchAll(true), 20000);
+    return () => clearInterval(interval);
+  }, [fetchAll, showAdd, savingContact, starting]);
+
+  const addContact = async (e) => {
+    e.preventDefault();
+    if (savingContact) return;
     if (!form.phone_number.trim()) {
       toast.error("Phone number is required");
       return;
     }
+    setSavingContact(true);
     try {
       await addOutboundContactApi(id, form);
       toast.success("Contact added");
       setShowAdd(false);
       setForm({ name: "", phone_number: "", email: "", company: "" });
-      fetchAll();
+      await fetchAll(true);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to add contact");
+      const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Failed to add contact");
+    } finally {
+      setSavingContact(false);
     }
   };
 
   const removeContact = async (contactId) => {
-    if (!confirm("Delete contact?")) return;
+    if (deletingId) return;
+    if (!window.confirm("Delete contact?")) return;
+    setDeletingId(contactId);
     try {
       await deleteOutboundContactApi(contactId);
       toast.success("Contact deleted");
-      fetchAll();
+      await fetchAll(true);
     } catch {
       toast.error("Delete failed");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    e.target.value = "";
+    if (!file || importing) return;
+    setImporting(true);
     try {
       const result = await importOutboundContactsApi(id, file);
       toast.success(`Imported ${result.imported} contacts`);
-      fetchAll();
+      await fetchAll(true);
     } catch {
       toast.error("Import failed");
+    } finally {
+      setImporting(false);
     }
-    e.target.value = "";
   };
 
   const startCampaign = async () => {
+    if (starting || campaign?.status === "completed") return;
     setStarting(true);
     try {
       const result = await startOutboundCampaignApi(id);
       toast.success(`Started calling ${result.queued_contacts} contacts`);
-      fetchAll();
+      await fetchAll(true);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to start campaign");
+      const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Failed to start campaign");
     } finally {
       setStarting(false);
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div style={{ padding: 60, textAlign: "center" }}>
-        <Loader2 size={28} style={{ animation: "spin 1s linear infinite" }} />
+        <Loader2 size={28} style={spinStyle} />
       </div>
     );
   }
@@ -130,12 +159,9 @@ export default function CampaignDetail() {
     <div style={{ background: C.pageBg, minHeight: "100vh", padding: "24px 28px" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button
-          onClick={() => navigate("/dashboard/calling/outbound/campaigns")}
-          style={{ background: "none", border: "none", cursor: "pointer", color: C.textMuted }}
-        >
+        <Btn variant="ghost" onClick={() => navigate("/dashboard/calling/outbound/campaigns")}>
           <ArrowLeft size={18} />
-        </button>
+        </Btn>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: C.text }}>
             {campaign.name}
@@ -145,33 +171,18 @@ export default function CampaignDetail() {
           </p>
         </div>
         <StatusBadge status={campaign.status} />
-        <button
-          onClick={fetchAll}
-          style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 8, cursor: "pointer" }}
-        >
+        <Btn variant="secondary" loading={refreshing} onClick={() => fetchAll(false)} style={{ padding: 8 }}>
           <RefreshCw size={14} />
-        </button>
-        <button
+        </Btn>
+        <Btn
+          variant="success"
+          loading={starting}
+          disabled={campaign.status === "completed"}
           onClick={startCampaign}
-          disabled={starting || campaign.status === "completed"}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: C.green,
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "8px 16px",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: ".8rem",
-            opacity: starting ? 0.7 : 1,
-          }}
         >
           <Play size={14} />
-          {starting ? "Starting..." : "Start Calling"}
-        </button>
+          {starting ? "Starting…" : "Start Calling"}
+        </Btn>
       </div>
 
       {stats && (
@@ -200,43 +211,14 @@ export default function CampaignDetail() {
       )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <button
-          onClick={() => setShowAdd(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: C.purple,
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "8px 14px",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: ".8rem",
-          }}
-        >
+        <Btn variant="primary" onClick={() => setShowAdd(true)}>
           <Plus size={14} />
           Add Contact
-        </button>
-        <button
-          onClick={() => fileRef.current?.click()}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 10,
-            padding: "8px 14px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: ".8rem",
-          }}
-        >
+        </Btn>
+        <Btn variant="secondary" loading={importing} onClick={() => fileRef.current?.click()}>
           <Upload size={14} />
-          CSV / JSON Upload
-        </button>
+          {importing ? "Importing…" : "CSV / JSON Upload"}
+        </Btn>
         <input ref={fileRef} type="file" accept=".csv,.json" hidden onChange={handleFile} />
       </div>
 
@@ -286,12 +268,14 @@ export default function CampaignDetail() {
                     <StatusBadge status={ct.status} />
                   </td>
                   <td style={{ padding: "12px 16px" }}>
-                    <button
+                    <Btn
+                      variant="danger"
+                      loading={deletingId === ct.id}
+                      disabled={!!deletingId}
                       onClick={() => removeContact(ct.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: C.red }}
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </Btn>
                   </td>
                 </tr>
               ))
@@ -309,42 +293,48 @@ export default function CampaignDetail() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 100,
+            zIndex: 1000,
           }}
-          onClick={() => setShowAdd(false)}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowAdd(false);
+          }}
         >
           <div
             style={{ background: C.card, borderRadius: 14, padding: 24, width: 400, maxWidth: "90vw" }}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: "0 0 16px", fontWeight: 800 }}>Add Contact</h3>
-            {["name", "phone_number", "email", "company"].map((field) => (
-              <input
-                key={field}
-                value={form[field]}
-                onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                placeholder={field.replace("_", " ")}
-                style={{
-                  width: "100%",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: `1px solid ${C.border}`,
-                  marginBottom: 10,
-                  boxSizing: "border-box",
-                }}
-              />
-            ))}
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setShowAdd(false)} style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button
-                onClick={addContact}
-                style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: C.purple, color: "#fff", fontWeight: 700, cursor: "pointer" }}
-              >
-                Add
-              </button>
-            </div>
+            <form onSubmit={addContact}>
+              {["name", "phone_number", "email", "company"].map((field) => (
+                <input
+                  key={field}
+                  value={form[field]}
+                  onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                  placeholder={field.replace("_", " ")}
+                  disabled={savingContact}
+                  style={{
+                    width: "100%",
+                    padding: 10,
+                    borderRadius: 10,
+                    border: `1px solid ${C.border}`,
+                    marginBottom: 10,
+                    boxSizing: "border-box",
+                  }}
+                />
+              ))}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <Btn
+                  variant="secondary"
+                  disabled={savingContact}
+                  onClick={() => setShowAdd(false)}
+                >
+                  Cancel
+                </Btn>
+                <Btn type="submit" variant="primary" loading={savingContact}>
+                  {savingContact ? "Adding…" : "Add"}
+                </Btn>
+              </div>
+            </form>
           </div>
         </div>
       )}
