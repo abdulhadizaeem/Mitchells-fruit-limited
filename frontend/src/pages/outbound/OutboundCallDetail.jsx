@@ -123,7 +123,7 @@ export default function OutboundCallDetail() {
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: C.purple,
+                background: C.blue,
                 marginTop: 6,
                 flexShrink: 0,
               }}

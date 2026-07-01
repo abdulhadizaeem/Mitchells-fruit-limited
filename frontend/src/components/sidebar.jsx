@@ -41,14 +41,14 @@ const SIDEBAR_CSS = `
     white-space:nowrap; overflow:hidden; box-sizing:border-box;
   }
   .vx-nav-link:hover  { background:${C.goldBg}; color:${C.gold}; }
-  .vx-nav-link.active { background:${C.purpleLight}; color:${C.purple}; font-weight:700; }
+  .vx-nav-link.active { background:${C.blueBg}; color:${C.blue}; font-weight:700; }
 
   .vx-profile-btn {
     display:flex; align-items:center; gap:9px; padding:8px 8px; border-radius:10px;
     background:transparent; border:none; cursor:pointer; width:100%; box-sizing:border-box;
     transition:background .15s;
   }
-  .vx-profile-btn:hover { background:${C.purpleLight}; }
+  .vx-profile-btn:hover { background:${C.blueBg}; }
 
   .vx-profile-popup { animation:vxDropIn .18s cubic-bezier(.22,1,.36,1) both; }
 
@@ -80,7 +80,7 @@ const SIDEBAR_CSS = `
     color:${C.textMuted}; display:flex; align-items:center; transition:color .15s;
     border-radius:4px;
   }
-  .vx-refresh-btn:hover { color:${C.purple}; }
+  .vx-refresh-btn:hover { color:${C.blue}; }
   .vx-refresh-btn.spinning svg { animation:spin .6s linear infinite; }
 
   .vx-stat-cell {
@@ -246,9 +246,9 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
               transition: "background .15s, border-color .15s, color .15s"
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = C.purpleLight;
-              e.currentTarget.style.borderColor = C.purpleAlt;
-              e.currentTarget.style.color = C.purple;
+              e.currentTarget.style.background = C.blueBg;
+              e.currentTarget.style.borderColor = C.blueLight;
+              e.currentTarget.style.color = C.blue;
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background = "none";
@@ -366,8 +366,8 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
               padding: "2px 7px",
               borderRadius: 100,
               flexShrink: 0,
-              background: C.purpleLight,
-              color: C.purple
+              background: C.blueBg,
+              color: C.blue
             }}>{item.badge}</span>}
           </>}
         </NavLink>)}
@@ -471,7 +471,7 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
                   fontWeight: 700,
                   letterSpacing: ".05em",
                   textTransform: "uppercase",
-                  color: user?.role === "admin" ? C.purple : C.blue
+                  color: user?.role === "admin" ? C.blue : C.blue
                 }}>
                   {user?.role ?? "user"}
                 </span>
@@ -517,8 +517,8 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
                     textTransform: "uppercase",
                     padding: "2px 8px",
                     borderRadius: 100,
-                    background: user?.role === "admin" ? C.purpleLight : C.blueLight,
-                    color: user?.role === "admin" ? C.purple : C.blue
+                    background: user?.role === "admin" ? C.blueBg : C.blueLight,
+                    color: user?.role === "admin" ? C.blue : C.blue
                   }}>
                     {user?.role ?? "user"}
                   </span>

@@ -31,11 +31,11 @@ function StatCard({ icon, label, value, loading }) {
             width: 36,
             height: 36,
             borderRadius: 10,
-            background: C.purpleBg,
+            background: C.blueBg,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: C.purple,
+            color: C.blue,
           }}
         >
           {icon}

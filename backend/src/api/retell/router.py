@@ -4,9 +4,10 @@
 # Agent. It serves as the primary webhook destination for Retell callbacks,
 # handles B2B inquiries logging, drafts/matches orders, and manages Clover POS mappings.
 
+import json
 import os
 import re
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi import status as http_status
@@ -48,6 +49,14 @@ from src.utils.db_functions import (
 )
 from src.services import retell_service
 from src.api.outbound.utils import clean_customer_value
+from src.utils.nlp_parser import (
+    _parse_callback_time,
+    _extract_callback_time_from_text,
+    _extract_caller_name,
+    _extract_company_from_data,
+    _extract_name_from_summary,
+    _extract_company_from_summary,
+)
 
 RETELL_API_KEY = os.getenv("RETELL_API_KEY", "")
 RETELL_WEBHOOK_SECRET = os.getenv("RETELL_WEBHOOK_SECRET", "")
@@ -69,6 +78,7 @@ def _check_business_hours(current_hhmm: str, open_hhmm: str, close_hhmm: str) ->
         return open_m <= now <= close_m
     else:
         return now >= open_m or now <= close_m
+
 
 
 class CallLogResponse(BaseModel):
@@ -754,64 +764,6 @@ async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     )
 
 
-def _extract_caller_name(data: dict | None) -> str | None:
-    if not data:
-        return None
-    for key in ("customer_name", "caller_name", "name", "owner_name", "user_name", "caller", "customer"):
-        val = clean_customer_value(data.get(key))
-        if val:
-            return val
-    return None
-
-
-def _extract_company_from_data(*sources: dict | None) -> str | None:
-    for data in sources:
-        if not data:
-            continue
-        for key in (
-            "company_name",
-            "company",
-            "customer_company",
-            "business_name",
-            "shop_name",
-            "store_name",
-            "organization",
-        ):
-            company = clean_customer_value(data.get(key))
-            if company:
-                return company
-    return None
-
-
-def _extract_name_from_summary(summary: str) -> str | None:
-    if not summary:
-        return None
-    m = re.search(r"\b(?:contacted|spoke with|spoke to|called|talked to|conversing with)\s+([A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)?)\s+(?:from|at|in|to|regarding|about|on)\b", summary)
-    if m:
-        name = m.group(1).strip()
-        if name.lower() not in ("the user", "the customer", "the client", "the distributor", "the retailer", "the agent", "the store", "ahmad store"):
-            return clean_customer_value(name)
-    m = re.search(r"\b(?:contacted|spoke with|spoke to|called|talked to)\s+([A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)?)\b", summary)
-    if m:
-        name = m.group(1).strip()
-        if name.lower() not in ("the user", "the customer", "the client", "the distributor", "the retailer", "the agent", "the store", "ahmad store"):
-            return clean_customer_value(name)
-    return None
-
-
-def _extract_company_from_summary(summary: str) -> str | None:
-    if not summary:
-        return None
-    patterns = (
-        r"\b(?:customer company is|company is|business is|shop is|store is)\s+([A-Z][a-zA-Z0-9'&.-]*(?:\s+[A-Z][a-zA-Z0-9'&.-]*){0,4})\b",
-        r"\b(?:from|at|of)\s+([A-Z][a-zA-Z0-9']+(?:\s+[A-Z][a-zA-Z0-9']+){0,3}\s+(?:Store|Shop|Mart|Distributor|Ltd|Co|Incorporated|Inc|Enterprises|Traders|Supermarket))\b",
-    )
-    for pattern in patterns:
-        m = re.search(pattern, summary, re.IGNORECASE)
-        if m:
-            return clean_customer_value(m.group(1))
-    return None
-
 
 def _is_outbound_call(call_data: dict) -> bool:
     if call_data.get("direction") == "outbound":
@@ -858,6 +810,16 @@ async def _enrich_call_logs_with_caller_names(
         responses.append(resp)
     return responses
 
+def _sanitize_log_data(data: dict) -> dict:
+    """Helper to omit massive transcript texts/objects before printing to the console."""
+    log_data = data.copy()
+    if "call" in log_data and isinstance(log_data["call"], dict):
+        log_data["call"] = log_data["call"].copy()
+        for key in ["transcript", "transcript_object", "transcript_with_tool_calls"]:
+            if key in log_data["call"]:
+                log_data["call"][key] = f"<{key} Omitted for Logs>"
+    return log_data
+
 
 @router.post("/webhook", response_model=WebhookResponse)
 async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
@@ -870,6 +832,11 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """
     try:
         event = await request.json()
+        print("\n=== RETELL WEBHOOK EVENT RECEIVED ===")
+        print(f"Event: {event.get('event')}")
+        # Temporarily silenced the massive JSON log to make DEBUG easier to read!
+        # print(json.dumps(_sanitize_log_data(event), indent=2))
+        print("=====================================\n")
     except Exception:
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
 
@@ -905,15 +872,25 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 call_status="ended",
             )
 
+        transcript_text = call_data.get("transcript") or ""
+        # The summary might be nested in the top-level payload or inside call_analysis if present
+        call_analysis = call_data.get("call_analysis", {})
+        summary_text = call_analysis.get("call_summary", "")
+        
+        combined_text = transcript_text + " " + summary_text
+        recall_at_val = _extract_callback_time_from_text(combined_text)
+
         update_data = {
             "call_status": "ended",
             "duration_ms": call_data.get("duration_ms"),
             "end_timestamp": call_data.get("end_timestamp"),
             "start_timestamp": call_data.get("start_timestamp"),
-            "transcript": call_data.get("transcript"),
+            "transcript": transcript_text if transcript_text else None,
             "recording_url": call_data.get("recording_url"),
             "raw_payload": event,
         }
+        if recall_at_val:
+            update_data["recall_at"] = recall_at_val
         if order_items:
             update_data["order_items"] = order_items
         if order_type:
@@ -1201,6 +1178,24 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 **feedback_updates,
             )
 
+        # ── Auto-schedule callback from call summary (most reliable place) ──────
+        # call_analyzed fires AFTER call_ended and contains the AI-generated summary
+        # which will say things like "customer asked to be called back in 30 minutes"
+        final_summary = analysis.get("call_summary") or ""
+        if final_summary:
+            recall_from_summary = _extract_callback_time_from_text(final_summary)
+            if recall_from_summary:
+                existing_log_for_recall = await get_call_log_by_call_id(db, call_id)
+                if existing_log_for_recall and not existing_log_for_recall.recall_at:
+                    # Only set if not already set (custom tool may have already set it)
+                    await update_call_log(db, call_id, recall_at=recall_from_summary)
+                    import logging as _rcl_log
+                    _rcl_log.getLogger("recall_scheduler").info(
+                        "Auto-recall set from summary for call=%s recall_at=%s",
+                        call_id,
+                        recall_from_summary.isoformat(),
+                    )
+
     return WebhookResponse(received=True)
 
 
@@ -1350,45 +1345,88 @@ async def log_trade_inquiry(request: Request, db: AsyncSession = Depends(get_db)
     from src.utils.db import TradeInquiry
     try:
         data = await request.json()
+        print("\n=== RETELL TRADE INQUIRY TOOL RECEIVED ===")
+        print(json.dumps(_sanitize_log_data(data), indent=2))
+        print("==========================================\n")
     except Exception:
         return {"success": False, "message": "Invalid JSON body"}
 
-    inquiry = TradeInquiry(
-        id=str(uuid.uuid4()),
-        caller_name=data.get("caller_name", ""),
-        caller_phone=data.get("caller_phone", ""),
-        company_name=data.get("company_name", ""),
-        location=data.get("location", ""),
-        product_interest=data.get("product_interest", ""),
-        notes=data.get("notes", ""),
-        email=data.get("email", ""),
-        caller_type=data.get("caller_type", "")
-    )
-    db.add(inquiry)
-    await db.commit()
+    args = data.get("args", data)
+    # ===== DEBUG: Print all extracted variables =====
+    fields = [
+        "customer_name",
+        "caller_phone",
+        "company_name",
+        "location",
+        "product_interest",
+        "notes",
+        "email",
+        "caller_type",
+    ]
 
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
+    print("===== EXTRACTED VARIABLES =====")
+    for field in fields:
+        print(f"{field}: {args.get(field)}")
+    print("===============================")
+
+    # Continue with your existing code
+    call_obj = data.get("call", {})
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or call_obj.get("call_id")
+    existing_log = await get_call_log_by_call_id(db, call_id) if call_id else None
+    print(f"[DEBUG] call_id resolved to: {call_id!r}")
+    print(f"[DEBUG] call_obj: {call_obj}")
+    print(f"[DEBUG] existing_log found: {existing_log is not None}")
+    caller_phone = args.get("caller_phone") or ""
+    caller_phone = caller_phone.strip()
+    if not caller_phone and call_obj:
+        direction = call_obj.get("direction", "inbound")
+        caller_phone = call_obj.get("from_number", "") if direction == "inbound" else call_obj.get("to_number", "")
+    if not caller_phone and existing_log:
+        caller_phone = existing_log.caller_phone or ""
+
+    customer_name = args.get("customer_name") or ""
+    customer_name = customer_name.strip()
+    if not customer_name and existing_log:
+        customer_name = existing_log.customer_name or existing_log.customer_name_extracted or ""
+    
+    try:
+        inquiry = TradeInquiry(
+            id=str(uuid.uuid4()),
+            caller_name=customer_name,
+            caller_phone=caller_phone,
+            company_name=args.get("company_name", ""),
+            location=args.get("location", ""),
+            product_interest=args.get("product_interest", ""),
+            notes=args.get("notes", ""),
+            email=args.get("email", ""),
+            caller_type=args.get("caller_type", "")
+        )
+        db.add(inquiry)
+        await db.commit()
+        print(f"[TRADE INQUIRY] ✅ Saved: {inquiry.id}")
+    except Exception as exc:
+        await db.rollback()
+        print(f"[TRADE INQUIRY] ❌ FAILED: {type(exc).__name__}: {exc}")
+        return {"success": False, "message": f"Failed to save inquiry: {exc}"}
+        
     if call_id:
-        existing_log = await get_call_log_by_call_id(db, call_id)
-        caller_phone = data.get("caller_phone", "")
-        caller_name = data.get("caller_name", "")
         if caller_phone:
-            await upsert_caller(db, caller_phone, caller_name or None)
+            await upsert_caller(db, caller_phone, customer_name or None)
         if not existing_log:
             existing_log = await create_call_log(
                 db,
                 call_id=call_id,
                 caller_phone=caller_phone or "Unknown",
-                customer_name=caller_name or None,
+                customer_name=customer_name or None,
                 direction="inbound",
                 call_status="ongoing",
             )
 
-        product_interest = data.get("product_interest", "")
-        company_name = data.get("company_name", "")
-        location = data.get("location", "")
-        caller_type = data.get("caller_type", "")
-        notes = data.get("notes", "")
+        product_interest = args.get("product_interest", "")
+        company_name = args.get("company_name", "")
+        location = args.get("location", "")
+        caller_type = args.get("caller_type", "")
+        notes = args.get("notes", "")
         order_desc = f"B2B Trade Inquiry: {product_interest}"
         notes_parts = []
         if company_name:
@@ -1408,8 +1446,8 @@ async def log_trade_inquiry(request: Request, db: AsyncSession = Depends(get_db)
             order_items=order_desc,
             order_type="B2B Trade Inquiry",
             special_notes=special_notes,
-            customer_name=caller_name or None,
-            customer_name_extracted=caller_name or None,
+            customer_name=customer_name or None,
+            customer_name_extracted=customer_name or None,
         )
 
     return {"inquiry_id": inquiry.id, "message": "Trade inquiry logged successfully."}
@@ -1425,24 +1463,26 @@ async def log_export_inquiry(request: Request, db: AsyncSession = Depends(get_db
     except Exception:
         return {"success": False, "message": "Invalid JSON body"}
 
+    args = data.get("args", data)
+
     inquiry = ExportInquiry(
         id=str(uuid.uuid4()),
-        caller_name=data.get("caller_name", ""),
-        caller_phone=data.get("caller_phone", ""),
-        company_name=data.get("company_name", ""),
-        country=data.get("country", ""),
-        product_interest=data.get("product_interest", ""),
-        notes=data.get("notes", ""),
-        email=data.get("email", "")
+        caller_name=args.get("caller_name", ""),
+        caller_phone=args.get("caller_phone", ""),
+        company_name=args.get("company_name", ""),
+        country=args.get("country", ""),
+        product_interest=args.get("product_interest", ""),
+        notes=args.get("notes", ""),
+        email=args.get("email", "")
     )
     db.add(inquiry)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or data.get("call", {}).get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
-        caller_phone = data.get("caller_phone", "")
-        caller_name = data.get("caller_name", "")
+        caller_phone = args.get("caller_phone", "")
+        caller_name = args.get("caller_name", "")
         if caller_phone:
             await upsert_caller(db, caller_phone, caller_name or None)
         if not existing_log:
@@ -1455,10 +1495,10 @@ async def log_export_inquiry(request: Request, db: AsyncSession = Depends(get_db
                 call_status="ongoing",
             )
 
-        product_interest = data.get("product_interest", "")
-        company_name = data.get("company_name", "")
-        country = data.get("country", "")
-        notes = data.get("notes", "")
+        product_interest = args.get("product_interest", "")
+        company_name = args.get("company_name", "")
+        country = args.get("country", "")
+        notes = args.get("notes", "")
         order_desc = f"B2B Export Inquiry: {product_interest}"
         notes_parts = []
         if company_name:
@@ -1490,29 +1530,34 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
     from src.utils.db import Complaint
     try:
         data = await request.json()
+        print("\n=== RETELL COMPLAINT LOG TOOL RECEIVED ===")
+        print(json.dumps(_sanitize_log_data(data), indent=2))
+        print("==========================================\n")
     except Exception:
         return {"success": False, "message": "Invalid JSON body"}
 
+    args = data.get("args", data)
+
     complaint = Complaint(
         id=str(uuid.uuid4()),
-        caller_name=data.get("caller_name", ""),
-        caller_phone=data.get("caller_phone", ""),
-        product_name=data.get("product_name", ""),
-        complaint_description=data.get("complaint_description", ""),
-        purchase_location=data.get("purchase_location", ""),
-        batch_lot_number=data.get("batch_lot_number", ""),
-        purchase_date=data.get("purchase_date", ""),
-        severity=data.get("severity", ""),
-        po_number=data.get("po_number", "")
+        caller_name=args.get("caller_name", ""),
+        caller_phone=args.get("caller_phone", ""),
+        product_name=args.get("product_name", ""),
+        complaint_description=args.get("complaint_description", ""),
+        purchase_location=args.get("purchase_location", ""),
+        batch_lot_number=args.get("batch_lot_number", ""),
+        purchase_date=args.get("purchase_date", ""),
+        severity=args.get("severity", ""),
+        po_number=args.get("po_number", "")
     )
     db.add(complaint)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or data.get("call", {}).get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
-        caller_phone = data.get("caller_phone", "")
-        caller_name = data.get("caller_name", "")
+        caller_phone = args.get("caller_phone", "")
+        caller_name = args.get("caller_name", "")
         if caller_phone:
             await upsert_caller(db, caller_phone, caller_name or None)
         if not existing_log:
@@ -1525,13 +1570,13 @@ async def log_complaint(request: Request, db: AsyncSession = Depends(get_db)):
                 call_status="ongoing",
             )
 
-        product_name = data.get("product_name", "")
-        complaint_description = data.get("complaint_description", "")
-        purchase_location = data.get("purchase_location", "")
-        batch_lot_number = data.get("batch_lot_number", "")
-        purchase_date = data.get("purchase_date", "")
-        severity = data.get("severity", "")
-        po_number = data.get("po_number", "")
+        product_name = args.get("product_name", "")
+        complaint_description = args.get("complaint_description", "")
+        purchase_location = args.get("purchase_location", "")
+        batch_lot_number = args.get("batch_lot_number", "")
+        purchase_date = args.get("purchase_date", "")
+        severity = args.get("severity", "")
+        po_number = args.get("po_number", "")
         notes_parts = []
         if product_name:
             notes_parts.append(f"Product: {product_name}")
@@ -1569,25 +1614,32 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
     from src.utils.db import CallbackRequest
     try:
         data = await request.json()
+        print("\n=== RETELL CALLBACK REQUEST TOOL RECEIVED ===")
+        # Temporarily silenced the massive JSON log to make DEBUG easier to read!
+        # print(json.dumps(_sanitize_log_data(data), indent=2))
+        # print(json.dumps(data, indent=4))
+        print("=============================================\n")
     except Exception:
         return {"success": False, "message": "Invalid JSON body"}
 
+    args = data.get("args", data)
+
     callback = CallbackRequest(
         id=str(uuid.uuid4()),
-        caller_name=data.get("caller_name", ""),
-        caller_phone=data.get("caller_phone", ""),
-        reason=data.get("reason", ""),
-        notes=data.get("notes", ""),
-        preferred_callback_time=data.get("preferred_callback_time", "")
+        caller_name=args.get("caller_name", ""),
+        caller_phone=args.get("caller_phone", ""),
+        reason=args.get("reason", ""),
+        notes=args.get("notes", ""),
+        preferred_callback_time=args.get("preferred_callback_time", "")
     )
     db.add(callback)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id")
+    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or data.get("call", {}).get("call_id")
     if call_id:
         existing_log = await get_call_log_by_call_id(db, call_id)
-        caller_phone = data.get("caller_phone", "")
-        caller_name = data.get("caller_name", "")
+        caller_phone = args.get("caller_phone", "")
+        caller_name = args.get("caller_name", "")
         if caller_phone:
             await upsert_caller(db, caller_phone, caller_name or None)
         if not existing_log:
@@ -1596,13 +1648,13 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
                 call_id=call_id,
                 caller_phone=caller_phone or "Unknown",
                 customer_name=caller_name or None,
-                direction="inbound",
+                direction=data.get("call", {}).get("direction", "inbound"),
                 call_status="ongoing",
             )
 
-        reason = data.get("reason", "")
-        notes = data.get("notes", "")
-        preferred_callback_time = data.get("preferred_callback_time", "")
+        reason = args.get("reason", "")
+        notes = args.get("notes", "")
+        preferred_callback_time = args.get("preferred_callback_time", "")
         notes_parts = []
         if reason:
             notes_parts.append(f"Reason: {reason}")
@@ -1612,6 +1664,11 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
             notes_parts.append(f"Preferred Time: {preferred_callback_time}")
         special_notes = ", ".join(notes_parts) if notes_parts else None
 
+        recall_at_val = _parse_callback_time(preferred_callback_time) if preferred_callback_time else None
+        
+        print(f"\n[DEBUG] Raw callback time string from LLM: '{preferred_callback_time}'")
+        print(f"[DEBUG] Parsed into Timestamp: {recall_at_val}\n")
+
         await update_call_log(
             db,
             call_id=call_id,
@@ -1619,7 +1676,16 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
             special_notes=special_notes,
             customer_name=caller_name or None,
             customer_name_extracted=caller_name or None,
+            recall_at=recall_at_val,
         )
+
+        call_metadata = data.get("call", {}).get("metadata", {})
+        contact_id = call_metadata.get("contact_id")
+        if contact_id and recall_at_val:
+            from src.api.outbound.repository import get_contact, update_contact
+            contact = await get_contact(db, contact_id)
+            if contact:
+                await update_contact(db, contact, recall_at=recall_at_val)
 
     return {"callback_id": callback.id, "message": "Callback request logged successfully."}
 

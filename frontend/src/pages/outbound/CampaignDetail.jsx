@@ -50,13 +50,14 @@ function fmtCd(secs) {
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
 }
-function ContactCountdown({ recallAt }) {
+function ContactCountdown({ recallAt, status }) {
   const secs = useCountdown(recallAt);
+  if (status === "calling") return null;
   if (secs === null) return <span style={{ color: "#ccc" }}>—</span>;
   const overdue = secs <= 0, urgent = !overdue && secs < 3600;
-  const color = overdue ? "#DC2626" : urgent ? "#D97706" : "#16A34A";
-  const bg    = overdue ? "#FEF2F2" : urgent ? "#FFFBEB" : "#F0FDF4";
-  const bdr   = overdue ? "#FECACA" : urgent ? "#FDE68A" : "#BBF7D0";
+  const color = overdue ? "#D97706" : urgent ? "#D97706" : "#16A34A";
+  const bg    = overdue ? "#FFFBEB" : urgent ? "#FFFBEB" : "#F0FDF4";
+  const bdr   = overdue ? "#FDE68A" : urgent ? "#FDE68A" : "#BBF7D0";
   return (
     <span style={{ display:"inline-flex", alignItems:"center", gap:3, fontSize:".68rem", fontWeight:700,
       padding:"2px 8px", borderRadius:100, background:bg, color, border:`1px solid ${bdr}`, whiteSpace:"nowrap" }}>
@@ -432,7 +433,7 @@ export default function CampaignDetail() {
           padding: "14px 16px",
         }}
       >
-        <Phone size={18} style={{ color: C.purple, flexShrink: 0 }} />
+        <Phone size={18} style={{ color: C.blue, flexShrink: 0 }} />
         <input
           value={quickPhone}
           onChange={(e) => setQuickPhone(e.target.value)}
@@ -615,7 +616,7 @@ export default function CampaignDetail() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".82rem" }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${C.border}`, background: "#FAFBFD" }}>
-              {["Name", "Phone", "Language", "Company", "Status", "Callback", "Actions"].map((h) => (
+              {["Name", "Phone", "Language", "Company", "Status", "Actions"].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -635,7 +636,7 @@ export default function CampaignDetail() {
           <tbody>
             {contacts.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: 32, textAlign: "center", color: C.textMuted }}>
+                <td colSpan={6} style={{ padding: 32, textAlign: "center", color: C.textMuted }}>
                   No contacts yet
                 </td>
               </tr>
@@ -677,9 +678,7 @@ export default function CampaignDetail() {
                   <td style={{ padding: "12px 16px" }}>
                     <StatusBadge status={ct.status} />
                   </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <ContactCountdown recallAt={contactRecalls[ct.id] ?? ct.recall_at} />
-                  </td>
+
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{ display: "flex", gap: 6 }}>
                       <Btn

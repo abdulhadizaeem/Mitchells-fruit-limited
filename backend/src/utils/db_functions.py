@@ -12,7 +12,7 @@ from datetime import datetime, timezone, date, timedelta
 from fastapi import HTTPException
 from fastapi import status as http_status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update, delete
+from sqlalchemy import select, func, update, delete, or_
 from sqlalchemy.orm import selectinload
 
 # Import tables/models from our db module
@@ -148,6 +148,9 @@ async def upsert_caller(db: AsyncSession, phone_number: str, customer_name: str 
     return caller
 
 
+
+
+
 async def update_caller_last_called(db: AsyncSession, phone_number: str) -> None:
     """
     Updates the timestamp of the last call received from a caller.
@@ -191,6 +194,9 @@ async def update_call_log(db: AsyncSession, call_id: str, **kwargs) -> None:
     Updates a call log's columns dynamically.
     **kwargs: Accepts keyword arguments matching table column names (e.g. transcript="hello", duration_ms=200).
     """
+    if kwargs.get("order_booked") and kwargs.get("call_successful") is None:
+        kwargs["call_successful"] = True
+
     await db.execute(
         update(CallLog).where(CallLog.call_id == call_id).values(**kwargs)
     )
@@ -248,10 +254,16 @@ async def get_combined_stats(db: AsyncSession) -> dict:
     Compiles calls and orders overview metrics for dashboard status badges.
     """
     total_calls = await db.scalar(select(func.count()).select_from(CallLog)) or 0
-    successful_calls = await db.scalar(select(func.count()).select_from(CallLog).where(CallLog.call_successful == True)) or 0
-    failed_calls = await db.scalar(select(func.count()).select_from(CallLog).where(CallLog.call_successful == False)) or 0
-    pending_calls = await db.scalar(select(func.count()).select_from(CallLog).where(CallLog.call_successful == None)) or 0
+    successful_calls = await db.scalar(select(func.count()).select_from(CallLog).where(or_(CallLog.call_successful == True, CallLog.order_booked == True))) or 0
+    failed_calls = await db.scalar(select(func.count()).select_from(CallLog).where(CallLog.call_successful == False, CallLog.order_booked == False)) or 0
+    pending_calls = await db.scalar(select(func.count()).select_from(CallLog).where(CallLog.call_successful == None, CallLog.order_booked == False)) or 0
     order_stats = await get_order_stats(db)
+
+    if successful_calls < order_stats["total"]:
+        successful_calls = order_stats["total"]
+
+    if total_calls < successful_calls + failed_calls + pending_calls:
+        total_calls = successful_calls + failed_calls + pending_calls
 
     # Compute today's calls in the restaurant's local timezone (Asia/Karachi)
     try:
@@ -263,7 +275,7 @@ async def get_combined_stats(db: AsyncSession) -> dict:
     except Exception:
         from datetime import timezone as _tz
         tz = _tz.utc
-
+    
     now_local = datetime.now(tz)
     today_local_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
     today_local_end = today_local_start + timedelta(days=1)
@@ -829,7 +841,7 @@ async def get_dashboard_stats(db: AsyncSession, days: int = 7) -> dict:
     Calculates total calls, total orders, call minutes, success rates, etc.
     """
     from datetime import datetime, timedelta, timezone
-    from sqlalchemy import func, select
+    from sqlalchemy import func, select, or_
     from src.utils.db import CallLog, Order, Caller
     since = datetime.now(timezone.utc) - timedelta(days=days)
     
@@ -856,8 +868,14 @@ async def get_dashboard_stats(db: AsyncSession, days: int = 7) -> dict:
         select(func.count())
         .select_from(CallLog)
         .where(CallLog.created_at >= since)
-        .where(CallLog.call_successful == True)
+        .where(or_(CallLog.call_successful == True, CallLog.order_booked == True))
     ) or 0
+    
+    if successful_calls < total_orders:
+        successful_calls = total_orders
+        
+    if total_calls < successful_calls:
+        total_calls = successful_calls
     
     # Subquery to calculate repeat caller rates
     subq = (

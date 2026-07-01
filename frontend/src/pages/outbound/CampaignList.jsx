@@ -196,7 +196,7 @@ export default function CampaignList() {
                   <td style={{ padding: "12px 16px" }} onClick={(e) => e.stopPropagation()}>
                     <Btn
                       variant="ghost"
-                      style={{ color: C.purple, marginRight: 4, padding: 4 }}
+                      style={{ color: C.blue, marginRight: 4, padding: 4 }}
                       onClick={(e) => openEdit(c, e)}
                     >
                       <Pencil size={14} />

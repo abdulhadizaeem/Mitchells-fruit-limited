@@ -66,7 +66,7 @@ const Complaints = () => {
             opacity: loading ? 0.6 : 1
           }}
         >
-          {loading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite", color: C.purple }} /> : <RefreshCw size={14} style={{ color: C.textMuted }} />}
+          {loading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite", color: C.blue }} /> : <RefreshCw size={14} style={{ color: C.textMuted }} />}
           Refresh
         </button>
       </div>
@@ -97,7 +97,7 @@ const Complaints = () => {
               {loading && complaints.length === 0 && (
                 <tr>
                   <td colSpan="5" style={{ padding: "60px 20px", textAlign: "center" }}>
-                    <Loader2 size={24} style={{ color: C.purple, margin: "0 auto", animation: "spin 1s linear infinite" }} />
+                    <Loader2 size={24} style={{ color: C.blue, margin: "0 auto", animation: "spin 1s linear infinite" }} />
                   </td>
                 </tr>
               )}
@@ -116,7 +116,7 @@ const Complaints = () => {
                     </td>
 
                     <td style={{ padding: "16px 20px", verticalAlign: "top" }}>
-                      <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".8rem", fontWeight: 700, color: C.purple, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 6 }}>
+                      <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".8rem", fontWeight: 700, color: C.blue, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 6 }}>
                         <Package size={12} /> {c.product_name}
                       </p>
                       {c.po_number && (

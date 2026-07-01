@@ -72,7 +72,7 @@ function hasOrder(c) {
 }
 function getOrderRevenue(c) {
   const fromDetails = c.order_details?.total_amount;
-  if (fromDetails != null && fromDetails > 0) return fromDetails;
+  if (fromDetails != null && fromDetails >= 0) return fromDetails;
   const items = c.order_details?.order_items;
   if (Array.isArray(items) && items.length > 0) {
     const sum = items.reduce((s, item) => {
@@ -80,7 +80,7 @@ function getOrderRevenue(c) {
       const qty = item.quantity ?? item.qty ?? 1;
       return s + price * qty;
     }, 0);
-    if (sum > 0) return sum;
+    if (sum >= 0) return sum;
   }
   return null;
 }
@@ -102,16 +102,18 @@ function getSentiment(c) {
 }
 function getOutcome(c) {
   if (c.call_status === "ongoing")
-    return { label: "Live", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
+    return { label: "Live", color: C.blue, bg: C.blueBg, border: C.blueBdr };
+  if (c.recall_at)
+    return { label: "Callback", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (hasOrder(c))
     return { label: "Ordered", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   const reason = c.call_reason?.toLowerCase() || "";
   if (reason.includes("complaint"))
     return { label: "Complaint", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (reason.includes("callback"))
-    return { label: "Callback", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
+    return { label: "Callback", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (reason.includes("trade") || reason.includes("export"))
-    return { label: "Inquiry", color: C.purple, bg: C.purpleBg, border: C.purpleBdr };
+    return { label: "Inquiry", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (c.call_successful === false)
     return { label: "Missed / Failed", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (c.call_successful === true)
@@ -240,8 +242,8 @@ function SetCallbackModal({ call, onClose, onSaved }) {
       }} onMouseDown={e => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: C.purpleBg, border: `1px solid ${C.purpleBdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Bell size={14} style={{ color: C.purple }} />
+            <div style={{ width: 30, height: 30, borderRadius: 9, background: C.blueBg, border: `1px solid ${C.blueBdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Bell size={14} style={{ color: C.blue }} />
             </div>
             <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".88rem", fontWeight: 800, color: C.text }}>Set Callback Reminder</span>
           </div>
@@ -259,8 +261,8 @@ function SetCallbackModal({ call, onClose, onSaved }) {
               style={{
                 fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 700,
                 padding: "10px 8px", borderRadius: 10,
-                background: C.purpleBg, border: `1px solid ${C.purpleBdr}`,
-                color: C.purpleText, cursor: saving ? "not-allowed" : "pointer",
+                background: C.blueBg, border: `1px solid ${C.blueBdr}`,
+                color: C.blue, cursor: saving ? "not-allowed" : "pointer",
                 transition: "opacity .15s",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 5
               }}>
@@ -287,7 +289,7 @@ function SetCallbackModal({ call, onClose, onSaved }) {
             style={{
               fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 700,
               padding: "8px 14px", borderRadius: 9, border: "none",
-              background: customDt ? C.purple : C.textGhost, color: "#fff",
+              background: customDt ? C.blue : C.textGhost, color: "#fff",
               cursor: customDt && !saving ? "pointer" : "not-allowed"
             }}>Set</button>
         </form>
@@ -344,8 +346,8 @@ function AudioPlayer({ url, duration }) {
   };
   return <div
     style={{
-      background: C.purpleBg,
-      border: `1px solid ${C.purpleBdr}`,
+      background: C.blueBg,
+      border: `1px solid ${C.blueBdr}`,
       borderRadius: 14,
       padding: "12px 14px",
       display: "flex",
@@ -370,7 +372,7 @@ function AudioPlayer({ url, duration }) {
 
       
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <Activity size={10} style={{ color: C.purple }} />
+        <Activity size={10} style={{ color: C.blue }} />
         <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".06em", textTransform: "uppercase" }}>
           Call Recording
         </span>
@@ -384,7 +386,7 @@ function AudioPlayer({ url, duration }) {
       width: 32,
       height: 32,
       borderRadius: "50%",
-      background: C.purple,
+      background: C.blue,
       border: "none",
       cursor: "pointer",
       display: "flex",
@@ -392,7 +394,7 @@ function AudioPlayer({ url, duration }) {
       justifyContent: "center",
       flexShrink: 0,
       color: "#fff",
-      boxShadow: `0 2px 10px ${C.purpleBdr}`
+      boxShadow: `0 2px 10px ${C.blueBdr}`
     }}
   >
           {playing ? <Pause size={11} /> : <Play size={11} style={{ marginLeft: 1 }} />}
@@ -403,7 +405,7 @@ function AudioPlayer({ url, duration }) {
     style={{ flex: 1, height: 4, background: "rgba(0,0,0,.1)", borderRadius: 99, cursor: "pointer", position: "relative" }}
     onClick={seek}
   >
-          <div style={{ width: `${pct}%`, height: "100%", background: C.purple, borderRadius: 99, transition: "width .1s" }} />
+          <div style={{ width: `${pct}%`, height: "100%", background: C.blue, borderRadius: 99, transition: "width .1s" }} />
           <div style={{
     position: "absolute",
     top: "50%",
@@ -412,7 +414,7 @@ function AudioPlayer({ url, duration }) {
     width: 12,
     height: 12,
     background: "#fff",
-    border: `2px solid ${C.purple}`,
+    border: `2px solid ${C.blue}`,
     borderRadius: "50%",
     boxShadow: "0 1px 4px rgba(0,0,0,.15)"
   }} />
@@ -435,6 +437,43 @@ function AudioPlayer({ url, duration }) {
       </div>
     </div>;
 }
+const cleanSummaryText = (text) => {
+  if (!text) return "";
+  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)/g) || [text];
+  const cleaned = sentences
+    .map(s => s.trim())
+    .filter(s => {
+      const lower = s.toLowerCase();
+      return !(lower.includes("feedback") || lower.includes("rated") || lower.includes("rating") || lower.includes("stars"));
+    })
+    .join(" ");
+  return cleaned;
+};
+
+const getFeedbackRatingVal = (call) => {
+  if (call.feedback_rating && call.feedback_rating >= 1 && call.feedback_rating <= 5) {
+    return call.feedback_rating;
+  }
+  if (!call.call_summary) return null;
+  const sentences = call.call_summary.match(/[^.!?]+[.!?]+(\s+|$)/g) || [call.call_summary];
+  for (const sentence of sentences) {
+    const lower = sentence.toLowerCase();
+    if (lower.includes("feedback") || lower.includes("rated") || lower.includes("rating")) {
+      // Prioritize explicit formats like "4/5" or "4 out of 5"
+      const explicitMatch = lower.match(/\b([1-5])\s*(?:\/|out of)\s*5\b/);
+      if (explicitMatch) {
+        return parseInt(explicitMatch[1], 10);
+      }
+      // Fallback: take the first number 1-5 found in the feedback sentence
+      const digits = lower.match(/\b([1-5])\b/g);
+      if (digits && digits.length > 0) {
+        return parseInt(digits[0], 10);
+      }
+    }
+  }
+  return null;
+};
+
 function DetailPanel({
   call,
   menuItems,
@@ -605,15 +644,15 @@ function DetailPanel({
       height: 42,
       borderRadius: "50%",
       flexShrink: 0,
-      background: C.purpleBg,
-      border: `1px solid ${C.purpleBdr}`,
+      background: C.blueBg,
+      border: `1px solid ${C.blueBdr}`,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       fontFamily: "Sora,sans-serif",
       fontSize: ".9rem",
       fontWeight: 800,
-      color: C.purpleText
+      color: C.blue
     }}
   >
           {name[0]?.toUpperCase() ?? "?"}
@@ -737,8 +776,8 @@ function DetailPanel({
       display: "flex",
       alignItems: "center",
       gap: 5,
-      color: tab === t.key ? C.purple : C.textMuted,
-      borderBottom: `2px solid ${tab === t.key ? C.purple : "transparent"}`,
+      color: tab === t.key ? C.blue : C.textMuted,
+      borderBottom: `2px solid ${tab === t.key ? C.blue : "transparent"}`,
       marginBottom: -1,
       transition: "color .15s",
       whiteSpace: "nowrap"
@@ -760,46 +799,69 @@ function DetailPanel({
   >
         {tab === "audit" && <>
             
-            {call.call_summary && <div
-    style={{
-      background: C.purpleBg,
-      border: `1px solid ${C.purpleBdr}`,
-      borderRadius: 14,
-      padding: "12px 14px"
-    }}
-  >
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-                  <Activity size={11} style={{ color: C.purple }} />
-                  <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 700, color: C.purpleText, letterSpacing: ".07em", textTransform: "uppercase" }}>
-                    Call Summary
-                  </span>
+            {(() => {
+              const cleaned = cleanSummaryText(call.call_summary);
+              if (!cleaned) return null;
+              return (
+                <div
+                  style={{
+                    background: C.blueBg,
+                    border: `1px solid ${C.blueBdr}`,
+                    borderRadius: 14,
+                    padding: "12px 14px"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+                    <Activity size={11} style={{ color: C.blue }} />
+                    <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 700, color: C.blue, letterSpacing: ".07em", textTransform: "uppercase" }}>
+                      Call Summary
+                    </span>
+                  </div>
+                  <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".74rem", color: C.textSub, lineHeight: 1.65, margin: 0 }}>
+                    {cleaned}
+                  </p>
                 </div>
-                <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".74rem", color: C.textSub, lineHeight: 1.65, margin: 0 }}>
-                  {call.call_summary}
-                </p>
-              </div>}
+              );
+            })()}
 
-            {call.customer_feedback && <div
-              style={{
-                background: C.goldBg,
-                border: `1px solid ${C.goldBdr}`,
-                borderRadius: 14,
-                padding: "12px 14px"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-                <MessageSquare size={11} style={{ color: C.gold }} />
-                <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 700, color: C.gold, letterSpacing: ".07em", textTransform: "uppercase" }}>
-                  Customer Feedback
-                </span>
-                {call.feedback_rating && <span style={{ marginLeft: "auto", fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 800, color: C.gold, background: "rgba(217, 119, 6, 0.1)", padding: "2px 7px", borderRadius: 100, border: `1px solid ${C.goldBdr}` }}>
-                  Rating: {call.feedback_rating} / 5
-                </span>}
-              </div>
-              <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".74rem", color: C.textSub, lineHeight: 1.65, margin: 0 }}>
-                {call.customer_feedback}
-              </p>
-            </div>}
+            {(() => {
+              const ratingVal = getFeedbackRatingVal(call);
+              if (ratingVal === null && !call.customer_feedback) return null;
+              return (
+                <div
+                  style={{
+                    background: C.goldBg,
+                    border: `1px solid ${C.goldBdr}`,
+                    borderRadius: 14,
+                    padding: "12px 14px"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+                    <MessageSquare size={11} style={{ color: C.gold }} />
+                    <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".63rem", fontWeight: 700, color: C.gold, letterSpacing: ".07em", textTransform: "uppercase" }}>
+                      Feedback
+                    </span>
+                  </div>
+                  {ratingVal !== null && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: call.customer_feedback ? 8 : 0 }}>
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <span key={index} style={{ color: index < ratingVal ? "#EAB308" : "#E5E7EB", fontSize: "1.2rem", lineHeight: 1 }}>
+                          ★
+                        </span>
+                      ))}
+                      <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".74rem", fontWeight: 700, color: C.textSub, marginLeft: 6 }}>
+                        ({ratingVal} / 5)
+                      </span>
+                    </div>
+                  )}
+                  {call.customer_feedback && (
+                    <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".74rem", color: C.textSub, lineHeight: 1.65, margin: 0 }}>
+                      {call.customer_feedback}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
             
             {call.recording_url ? <AudioPlayer url={call.recording_url} duration={call.duration_ms} /> : <div
     style={{
@@ -852,15 +914,15 @@ function DetailPanel({
         height: 22,
         borderRadius: "50%",
         flexShrink: 0,
-        background: isAgent ? C.purpleBg : C.blueBg,
-        border: `1px solid ${isAgent ? C.purpleBdr : C.blueBdr}`,
+        background: isAgent ? C.blueBg : C.blueBg,
+        border: `1px solid ${isAgent ? C.blueBdr : C.blueBdr}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "Sora,sans-serif",
         fontSize: ".58rem",
         fontWeight: 800,
-        color: isAgent ? C.purpleText : C.gold,
+        color: isAgent ? C.blue : C.gold,
         marginTop: 2
       }}
     >
@@ -871,8 +933,8 @@ function DetailPanel({
         maxWidth: "82%",
         padding: "8px 12px",
         borderRadius: isAgent ? "4px 14px 14px 14px" : "14px 4px 14px 14px",
-        background: isAgent ? C.purpleBg : C.blueBg,
-        border: `1px solid ${isAgent ? C.purpleBdr : C.blueBdr}`,
+        background: isAgent ? C.blueBg : C.blueBg,
+        border: `1px solid ${isAgent ? C.blueBdr : C.blueBdr}`,
         fontFamily: "Sora,sans-serif",
         fontSize: ".72rem",
         color: C.textSub,
@@ -996,7 +1058,7 @@ function DetailPanel({
     const price = item.price ?? item.unit_price ?? item.item_price ?? 0;
     const qty = item.quantity ?? item.qty ?? 1;
     return <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                              <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 800, color: C.purpleText, width: 24, flexShrink: 0 }}>
+                              <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".72rem", fontWeight: 800, color: C.blue, width: 24, flexShrink: 0 }}>
                                 {qty}×
                               </span>
                               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1007,7 +1069,7 @@ function DetailPanel({
                                     · {item.special_instructions}
                                   </p>}
                               </div>
-                              {price > 0 && <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".73rem", fontWeight: 700, color: C.blue, flexShrink: 0 }}>
+                              {price >= 0 && <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".73rem", fontWeight: 700, color: C.blue, flexShrink: 0 }}>
                                   {formatPKR(price * qty)}
                                 </span>}
                             </div>;
@@ -1166,14 +1228,14 @@ function DetailPanel({
                               {item.item}
                             </p>
                           </div>
-                          {item.price > 0 && <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".73rem", fontWeight: 700, color: C.gold, flexShrink: 0 }}>
+                          {item.price >= 0 && <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".73rem", fontWeight: 700, color: C.gold, flexShrink: 0 }}>
                               {formatPKR(item.price * item.quantity)}
                             </span>}
                         </div>)}
                     </div>
 
                     
-                    {extractedTotal > 0 && <div
+                    {extractedTotal >= 0 && <div
     style={{
       padding: "10px 14px",
       borderTop: `1px solid ${C.border}`,
@@ -1275,9 +1337,9 @@ function DetailPanel({
       fontWeight: 700,
       padding: "9px 12px",
       borderRadius: 11,
-      background: C.purpleBg,
-      border: `1px solid ${C.purpleBdr}`,
-      color: C.purpleText,
+      background: C.blueBg,
+      border: `1px solid ${C.blueBdr}`,
+      color: C.blue,
       cursor: "pointer"
     }}
   >
@@ -1350,7 +1412,7 @@ function DetailPanel({
         {/* ── Callback Reminder Row ── */}
         <div style={{ borderTop: `1px solid ${C.borderFaint}`, paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Bell size={11} style={{ color: localRecallAt ? C.purple : C.textGhost }} />
+            <Bell size={11} style={{ color: localRecallAt ? C.blue : C.textGhost }} />
             <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".62rem", fontWeight: 700, color: C.textGhost, textTransform: "uppercase", letterSpacing: ".06em" }}>Callback</span>
             {localRecallAt && <CallbackCountdown recallAt={localRecallAt} compact />}
           </div>
@@ -1360,8 +1422,8 @@ function DetailPanel({
               display: "flex", alignItems: "center", gap: 5,
               fontFamily: "Sora,sans-serif", fontSize: ".65rem", fontWeight: 700,
               padding: "5px 10px", borderRadius: 9,
-              background: C.purpleBg, border: `1px solid ${C.purpleBdr}`,
-              color: C.purpleText, cursor: "pointer"
+              background: C.blueBg, border: `1px solid ${C.blueBdr}`,
+              color: C.blue, cursor: "pointer"
             }}
           >
             <Timer size={10} />{localRecallAt ? "Edit Reminder" : "Set Callback"}
@@ -1601,9 +1663,9 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }) {
       padding: "8px 12px",
       borderRadius: 8,
       cursor: "pointer",
-      background: orderType.toLowerCase() === type.toLowerCase() ? C.purpleBg : C.inputBg,
-      color: orderType.toLowerCase() === type.toLowerCase() ? C.purpleText : C.textSub,
-      border: `1.5px solid ${orderType.toLowerCase() === type.toLowerCase() ? C.purpleBdr : C.border}`,
+      background: orderType.toLowerCase() === type.toLowerCase() ? C.blueBg : C.inputBg,
+      color: orderType.toLowerCase() === type.toLowerCase() ? C.blue : C.textSub,
+      border: `1.5px solid ${orderType.toLowerCase() === type.toLowerCase() ? C.blueBdr : C.border}`,
       textTransform: "capitalize",
       transition: "all .15s"
     }}
@@ -1672,7 +1734,7 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }) {
       padding: "8px 16px",
       borderRadius: 8,
       border: "none",
-      background: newItemName ? C.purple : C.inputBg,
+      background: newItemName ? C.blue : C.inputBg,
       color: newItemName ? "#fff" : C.textGhost,
       cursor: newItemName ? "pointer" : "not-allowed",
       transition: "background .15s"
@@ -1767,7 +1829,7 @@ function ReviewOrderModal({ call, menuItems, onClose, onSuccess }) {
       padding: "9px 20px",
       borderRadius: 10,
       border: "none",
-      background: selectedItems.length > 0 ? C.purple : C.textGhost,
+      background: selectedItems.length > 0 ? C.blue : C.textGhost,
       color: "#fff",
       cursor: submitting || selectedItems.length === 0 ? "not-allowed" : "pointer",
       transition: "opacity .15s"
@@ -1938,7 +2000,7 @@ function CallsOrders() {
     >
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <Loader2 size={22} style={{ color: C.purple, animation: "spin .8s linear infinite" }} />
+          <Loader2 size={22} style={{ color: C.blue, animation: "spin .8s linear infinite" }} />
           <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".82rem", color: C.textMuted, margin: 0 }}>
             Loading calls…
           </p>
@@ -2006,14 +2068,14 @@ function CallsOrders() {
       height: 34,
       borderRadius: 10,
       flexShrink: 0,
-      background: C.purpleBg,
-      border: `1px solid ${C.purpleBdr}`,
+      background: C.blueBg,
+      border: `1px solid ${C.blueBdr}`,
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
     }}
   >
-              <Package size={16} style={{ color: C.purple }} />
+              <Package size={16} style={{ color: C.blue }} />
             </div>
             <div>
               <h1
@@ -2126,14 +2188,14 @@ function CallsOrders() {
                     fontSize: ".67rem",
                     fontWeight: 700,
                     background: "#fff",
-                    border: `1.5px solid ${dateFilter !== "all" ? C.purpleBdr : C.border}`,
+                    border: `1.5px solid ${dateFilter !== "all" ? C.blueBdr : C.border}`,
                     borderRadius: 100,
                     padding: "4px 26px 4px 12px",
-                    color: dateFilter !== "all" ? C.purple : C.textSub,
+                    color: dateFilter !== "all" ? C.blue : C.textSub,
                     cursor: "pointer",
                     appearance: "none",
                     outline: "none",
-                    boxShadow: dateFilter !== "all" ? `0 1px 8px ${C.purpleBdr}` : "none",
+                    boxShadow: dateFilter !== "all" ? `0 1px 8px ${C.blueBdr}` : "none",
                     transition: "all .15s"
                   }}
                 >
@@ -2142,7 +2204,7 @@ function CallsOrders() {
                   <option value="7d">7 Days</option>
                   <option value="30d">1 Month</option>
                 </select>
-                <ChevronDown size={10} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", color: dateFilter !== "all" ? C.purple : C.textMuted, pointerEvents: "none" }} />
+                <ChevronDown size={10} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", color: dateFilter !== "all" ? C.blue : C.textMuted, pointerEvents: "none" }} />
               </div>
             </div>
           </div>
@@ -2154,7 +2216,7 @@ function CallsOrders() {
             {["all", "ordered", "info", "complaint", "inquiry", "callback", "missed"].map((o) => {
     const active = outcomeFilter === o;
     const label = o === "all" ? "All" : o === "ordered" ? "Ordered" : o === "info" ? "Info" : o === "complaint" ? "Complaint" : o === "inquiry" ? "Inquiry" : o === "callback" ? "Callback" : "Missed";
-    const dot = o === "ordered" ? C.blue : o === "info" ? C.gold : o === "missed" ? C.blue : o === "complaint" ? C.blue : o === "inquiry" ? C.purple : o === "callback" ? C.purple : C.textMuted;
+    const dot = o === "ordered" ? C.blue : o === "info" ? C.gold : o === "missed" ? C.blue : o === "complaint" ? C.blue : o === "inquiry" ? C.blue : o === "callback" ? C.blue : C.textMuted;
     return <button
       key={o}
       className="co-chip"
@@ -2165,14 +2227,14 @@ function CallsOrders() {
         fontWeight: 700,
         padding: "4px 11px",
         borderRadius: 100,
-        border: active ? `1.5px solid ${C.purpleBdr}` : `1.5px solid ${C.border}`,
+        border: active ? `1.5px solid ${C.blueBdr}` : `1.5px solid ${C.border}`,
         cursor: "pointer",
-        background: active ? C.purpleBg : "#fff",
-        color: active ? C.purple : C.textSub,
+        background: active ? C.blueBg : "#fff",
+        color: active ? C.blue : C.textSub,
         display: "flex",
         alignItems: "center",
         gap: 5,
-        boxShadow: active ? `0 1px 8px ${C.purpleBdr}` : "none"
+        boxShadow: active ? `0 1px 8px ${C.blueBdr}` : "none"
       }}
     >
                   {o !== "all" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />}
@@ -2188,7 +2250,7 @@ function CallsOrders() {
             {["all", "positive", "neutral", "negative"].map((s) => {
     const active = sentimentFilter === s;
     const label = s === "all" ? "All" : s === "positive" ? "Happy" : s === "neutral" ? "Neutral" : "Frustrated";
-    const accent = s === "positive" ? { bg: C.blueBg, bdr: C.blueBdr, txt: C.blue } : s === "neutral" ? { bg: C.goldBg, bdr: C.goldBdr, txt: C.gold } : s === "negative" ? { bg: C.blueBg, bdr: C.blueBdr, txt: C.blue } : { bg: C.purpleBg, bdr: C.purpleBdr, txt: C.purple };
+    const accent = s === "positive" ? { bg: C.blueBg, bdr: C.blueBdr, txt: C.blue } : s === "neutral" ? { bg: C.goldBg, bdr: C.goldBdr, txt: C.gold } : s === "negative" ? { bg: C.blueBg, bdr: C.blueBdr, txt: C.blue } : { bg: C.blueBg, bdr: C.blueBdr, txt: C.blue };
     return <button
       key={s}
       className="co-chip"
@@ -2227,12 +2289,12 @@ function CallsOrders() {
                     fontWeight: 800,
                     padding: "6px 16px",
                     borderRadius: 100,
-                    border: `1.5px solid ${directionFilter === d ? C.purpleBdr : C.border}`,
-                    background: directionFilter === d ? C.purpleBg : "#fff",
-                    color: directionFilter === d ? C.purple : C.textSub,
+                    border: `1.5px solid ${directionFilter === d ? C.blueBdr : C.border}`,
+                    background: directionFilter === d ? C.blueBg : "#fff",
+                    color: directionFilter === d ? C.blue : C.textSub,
                     cursor: "pointer",
                     textTransform: "capitalize",
-                    boxShadow: directionFilter === d ? `0 1px 8px ${C.purpleBdr}` : "none",
+                    boxShadow: directionFilter === d ? `0 1px 8px ${C.blueBdr}` : "none",
                     transition: "all .2s ease",
                     display: "flex",
                     alignItems: "center",
@@ -2300,7 +2362,7 @@ function CallsOrders() {
     }}
   >
               
-              <button onClick={() => toggleSort("timestamp")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "timestamp" ? C.purple : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <button onClick={() => toggleSort("timestamp")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "timestamp" ? C.blue : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 Timestamp {sortField === "timestamp" ? sortDir === "asc" ? <ArrowUp size={9} /> : <ArrowDown size={9} /> : <ArrowUpDown size={9} style={{ opacity: 0.4 }} />}
               </button>
               
@@ -2310,13 +2372,13 @@ function CallsOrders() {
               
               <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".08em", textTransform: "uppercase" }}>Outcome</div>
               
-              <button onClick={() => toggleSort("duration")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "duration" ? C.purple : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <button onClick={() => toggleSort("duration")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "duration" ? C.blue : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 Duration {sortField === "duration" ? sortDir === "asc" ? <ArrowUp size={9} /> : <ArrowDown size={9} /> : <ArrowUpDown size={9} style={{ opacity: 0.4 }} />}
               </button>
               
               <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".08em", textTransform: "uppercase" }}>Sentiment</div>
               
-              <button onClick={() => toggleSort("revenue")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "revenue" ? C.purple : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <button onClick={() => toggleSort("revenue")} style={{ display: "flex", alignItems: "center", gap: 3, fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: sortField === "revenue" ? C.blue : C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 Total {sortField === "revenue" ? sortDir === "asc" ? <ArrowUp size={9} /> : <ArrowDown size={9} /> : <ArrowUpDown size={9} style={{ opacity: 0.4 }} />}
               </button>
               <div style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".08em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 3 }}>
@@ -2348,8 +2410,8 @@ function CallsOrders() {
         gridTemplateColumns: selected ? "110px 60px 1fr 110px 65px 90px 72px 90px 24px" : "140px 80px 1fr 140px 82px 108px 90px 110px 28px",
         padding: "11px 20px",
         borderBottom: `1px solid ${C.borderFaint}`,
-        borderLeft: isSelected ? `2px solid ${C.purple}` : "2px solid transparent",
-        background: isSelected ? C.purpleBg : "transparent",
+        borderLeft: isSelected ? `2px solid ${C.blue}` : "2px solid transparent",
+        background: isSelected ? C.blueBg : "transparent",
         cursor: "pointer",
         alignItems: "center"
       }}
@@ -2387,15 +2449,15 @@ function CallsOrders() {
         height: 30,
         borderRadius: "50%",
         flexShrink: 0,
-        background: isSelected ? C.purpleBg : C.inputBg,
-        border: `1px solid ${isSelected ? C.purpleBdr : C.border}`,
+        background: isSelected ? C.blueBg : C.inputBg,
+        border: `1px solid ${isSelected ? C.blueBdr : C.border}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "Sora,sans-serif",
         fontSize: ".68rem",
         fontWeight: 800,
-        color: isSelected ? C.purpleText : C.textMuted
+        color: isSelected ? C.blue : C.textMuted
       }}
     >
                           {name[0]?.toUpperCase() ?? "?"}
@@ -2473,7 +2535,7 @@ function CallsOrders() {
 
                       
                       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <ChevronRight size={13} style={{ color: isSelected ? C.purple : "rgba(0,0,0,.15)" }} />
+                        <ChevronRight size={13} style={{ color: isSelected ? C.blue : "rgba(0,0,0,.15)" }} />
                       </div>
                     </div>;
   })}
@@ -2550,7 +2612,7 @@ function CallsOrders() {
     return <button
       key={p}
       onClick={() => setPage(p)}
-      style={{ fontFamily: "Sora,sans-serif", fontSize: ".67rem", fontWeight: 800, width: 30, height: 28, borderRadius: 8, border: `1px solid ${page === p ? C.purpleBdr : C.border}`, background: page === p ? C.purpleBg : "#fff", color: page === p ? C.purpleText : C.textSub, cursor: "pointer" }}
+      style={{ fontFamily: "Sora,sans-serif", fontSize: ".67rem", fontWeight: 800, width: 30, height: 28, borderRadius: 8, border: `1px solid ${page === p ? C.blueBdr : C.border}`, background: page === p ? C.blueBg : "#fff", color: page === p ? C.blue : C.textSub, cursor: "pointer" }}
     >{p}</button>;
   })}
 

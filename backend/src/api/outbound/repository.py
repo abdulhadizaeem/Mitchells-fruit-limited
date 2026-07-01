@@ -174,7 +174,7 @@ async def update_contact(
     **kwargs,
 ) -> OutboundContact:
     for key, value in kwargs.items():
-        if value is not None and hasattr(contact, key):
+        if hasattr(contact, key):
             setattr(contact, key, value)
     await db.commit()
     await db.refresh(contact)

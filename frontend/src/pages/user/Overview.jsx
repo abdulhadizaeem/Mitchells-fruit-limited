@@ -240,8 +240,8 @@ export default function Overview() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: "100vh", background: C.pageBg }}>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.purpleBg, border: `1px solid ${C.purpleBdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Loader2 size={22} style={{ color: C.purple, animation: "spin .8s linear infinite" }} />
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.blueBg, border: `1px solid ${C.blueBdr}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Loader2 size={22} style={{ color: C.blue, animation: "spin .8s linear infinite" }} />
           </div>
           <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".82rem", color: C.textMuted, margin: 0, letterSpacing: ".02em" }}>
             Loading dashboard…
@@ -450,7 +450,7 @@ export default function Overview() {
                   label: "Update Product Availability",
                   sub: "Manage stock and product catalog",
                   icon: <ShoppingBag size={16} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   path: "/dashboard/menu",
                 },
@@ -458,7 +458,7 @@ export default function Overview() {
                   label: "Block a Number",
                   sub: "Ban a spam or problem caller",
                   icon: <PhoneOff size={16} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   path: "/dashboard/calls",
                 },
@@ -466,7 +466,7 @@ export default function Overview() {
                   label: "Edit AI Greeting",
                   sub: "Change prompt or hours announcement",
                   icon: <BookOpen size={16} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   path: "/dashboard/settings",
                 },
@@ -537,7 +537,7 @@ export default function Overview() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <Activity size={13} style={{ color: C.purple }} />
+                <Activity size={13} style={{ color: C.blue }} />
                 <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".69rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".06em", textTransform: "uppercase" }}>
                   Performance
                 </span>
@@ -557,7 +557,7 @@ export default function Overview() {
                   borderRadius: 9,
                   border: `1px solid ${C.border}`,
                   background: C.card,
-                  color: C.purple,
+                  color: C.blue,
                   cursor: "pointer",
                   outline: "none",
                   appearance: "none",
@@ -591,22 +591,22 @@ export default function Overview() {
                       : (report?.summary.total_orders ?? 0).toLocaleString(),
                   sub: periodLabel,
                   icon: <ShoppingBag size={14} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   iconBg: "rgba(27,63,122,.1)",
                   iconBorder: "rgba(27,63,122,.2)",
-                  topLine: C.purple,
+                  topLine: C.blue,
                 },
                 {
                   label: "AI Revenue",
                   value: formatPKR(aiRevenue),
                   sub: "gross revenue",
                   icon: <DollarSign size={14} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   iconBg: "rgba(27,63,122,.1)",
                   iconBorder: "rgba(27,63,122,.2)",
-                  topLine: C.purple,
+                  topLine: C.blue,
                 },
                 {
                   label: "Minutes Used",
@@ -615,22 +615,22 @@ export default function Overview() {
                     : (report?.summary.total_minutes ?? 0).toLocaleString(),
                   sub: "API minutes",
                   icon: <Timer size={14} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   iconBg: "rgba(27,63,122,.1)",
                   iconBorder: "rgba(27,63,122,.2)",
-                  topLine: C.purple,
+                  topLine: C.blue,
                 },
                 {
                   label: "Missed / Failed",
                   value: reportLoading ? "—" : missedCount.toLocaleString(),
                   sub: reportLoading || missedPct === null ? "didn't complete" : `${missedPct}% of total calls`,
                   icon: <PhoneOff size={14} />,
-                  accent: C.purple,
+                  accent: C.blue,
                   rawAccent: "#1B3F7A",
                   iconBg: "rgba(27,63,122,.1)",
                   iconBorder: "rgba(27,63,122,.2)",
-                  topLine: C.purple,
+                  topLine: C.blue,
                 },
               ].map((card) => (
                 <div
@@ -690,7 +690,7 @@ export default function Overview() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10, flexShrink: 0 }}>
-            <Clock size={13} style={{ color: C.purple }} />
+            <Clock size={13} style={{ color: C.blue }} />
             <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".69rem", fontWeight: 700, color: C.textMuted, letterSpacing: ".06em", textTransform: "uppercase" }}>
               Live Activity
             </span>
@@ -722,7 +722,7 @@ export default function Overview() {
                 <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".78rem", fontWeight: 700, color: C.text, margin: 0 }}>
                   Recent Orders
                 </p>
-                <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: C.purpleBg, color: C.purple, border: `1px solid ${C.purpleBdr}` }}>
+                <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}` }}>
                   last 5
                 </span>
               </div>
@@ -758,8 +758,8 @@ export default function Overview() {
                               width: 30,
                               height: 30,
                               borderRadius: "50%",
-                              background: C.purpleBg,
-                              border: `1px solid ${C.purpleBdr}`,
+                              background: C.blueBg,
+                              border: `1px solid ${C.blueBdr}`,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -767,7 +767,7 @@ export default function Overview() {
                               fontFamily: "Sora,sans-serif",
                               fontSize: ".7rem",
                               fontWeight: 800,
-                              color: C.purpleText,
+                              color: C.blue,
                             }}
                           >
                             {name[0]?.toUpperCase() ?? "?"}
@@ -822,7 +822,7 @@ export default function Overview() {
                 <p style={{ fontFamily: "Sora,sans-serif", fontSize: ".78rem", fontWeight: 700, color: C.text, margin: 0 }}>
                   Recent Calls
                 </p>
-                <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: C.purpleBg, color: C.purple, border: `1px solid ${C.purpleBdr}` }}>
+                <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}` }}>
                   last 5
                 </span>
               </div>
@@ -892,7 +892,7 @@ export default function Overview() {
                             Ordered
                           </span>
                         ) : c.call_reason ? (
-                          <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 600, padding: "2px 8px", borderRadius: 100, background: C.purpleBg, color: C.purpleText, border: `1px solid ${C.purpleBdr}`, flexShrink: 0, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span style={{ fontFamily: "Sora,sans-serif", fontSize: ".61rem", fontWeight: 600, padding: "2px 8px", borderRadius: 100, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}`, flexShrink: 0, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {c.call_reason}
                           </span>
                         ) : (

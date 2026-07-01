@@ -98,7 +98,7 @@ const CSS = `
     -webkit-appearance:none; appearance:none;
   }
   .vx-st input:focus, .vx-st textarea:focus, .vx-st select:focus {
-    border-color:${C.purpleAlt}; background:#FDFCFF; box-shadow:0 0 0 3px ${C.purpleRing};
+    border-color:${C.blueLight}; background:#FDFCFF; box-shadow:0 0 0 3px ${C.blueRing};
   }
   .vx-st input::placeholder, .vx-st textarea::placeholder { color:${C.textLight}; }
   .vx-st textarea { resize:vertical; line-height:1.65; }
@@ -120,7 +120,7 @@ const CSS = `
   .vx-st input[type="range"]::-webkit-slider-runnable-track { height:6px; border-radius:6px; background:${C.border}; }
   .vx-st input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
-    background:${C.purple}; border:2.5px solid #fff; box-shadow:0 1px 6px rgba(27,63,122,.38); margin-top:-6px; cursor:pointer;
+    background:${C.blue}; border:2.5px solid #fff; box-shadow:0 1px 6px rgba(27,63,122,.38); margin-top:-6px; cursor:pointer;
   }
 
   .vx-iw { position:relative; display:flex; align-items:center; }
@@ -133,7 +133,7 @@ const CSS = `
   .vx-card { transition:box-shadow .2s; }
   .vx-card:hover { box-shadow:0 4px 22px rgba(15,15,26,.07) !important; }
 
-  .vx-vc:hover { border-color:${C.purpleAlt} !important; background:rgba(42,91,168,.03) !important; }
+  .vx-vc:hover { border-color:${C.blueLight} !important; background:rgba(42,91,168,.03) !important; }
 
   .vx-nav-item {
     display:inline-flex; align-items:center; gap:7px;
@@ -144,13 +144,13 @@ const CSS = `
     position:relative; margin-bottom:-1.5px;
   }
   .vx-nav-item:hover:not(.vx-nav-on) { background:rgba(27,63,122,.045); }
-  .vx-nav-on { border-bottom-color:${C.purple} !important; background:rgba(27,63,122,.04) !important; }
+  .vx-nav-on { border-bottom-color:${C.blue} !important; background:rgba(27,63,122,.04) !important; }
   .vx-nav-icon {
     width:20px; height:20px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
     color:${C.textMuted}; transition:color .14s;
   }
-  .vx-nav-on .vx-nav-icon { color:${C.purple}; }
+  .vx-nav-on .vx-nav-icon { color:${C.blue}; }
 
   .vx-st .vx-ts {
     font-family:'Sora',sans-serif; font-size:.73rem; color:${C.text};
@@ -162,10 +162,10 @@ const CSS = `
     transition:border-color .18s, box-shadow .18s;
   }
   .vx-st .vx-ts:focus {
-    border-color:${C.purpleAlt}; background-color:#FDFCFF; box-shadow:0 0 0 3px ${C.purpleRing};
+    border-color:${C.blueLight}; background-color:#FDFCFF; box-shadow:0 0 0 3px ${C.blueRing};
   }
 
-  .vx-conn:hover { border-color:${C.purpleAlt} !important; color:${C.purple} !important; }
+  .vx-conn:hover { border-color:${C.blueLight} !important; color:${C.blue} !important; }
 
   .vx-sec { animation:secIn .26s cubic-bezier(.22,1,.36,1) both; }
 
@@ -238,13 +238,13 @@ function Field({ label, hint, children, optional }) {
     </div>;
 }
 function PlannedBadge() {
-  return <span style={{ fontFamily: C.font, fontSize: ".6rem", fontWeight: 700, letterSpacing: ".05em", padding: "2px 7px", borderRadius: 100, background: C.purpleLight, color: C.purpleAlt }}>
+  return <span style={{ fontFamily: C.font, fontSize: ".6rem", fontWeight: 700, letterSpacing: ".05em", padding: "2px 7px", borderRadius: 100, background: C.blueBg, color: C.blueLight }}>
       Planned
     </span>;
 }
 function InfoNote({ children }) {
   return <div style={{ display: "flex", gap: 9, padding: "11px 13px", borderRadius: 9, background: "rgba(27,63,122,.05)", border: `1px solid rgba(42,91,168,.14)` }}>
-      <Info size={12} style={{ color: C.purpleAlt, flexShrink: 0, marginTop: 1 }} />
+      <Info size={12} style={{ color: C.blueLight, flexShrink: 0, marginTop: 1 }} />
       <p style={{ margin: 0, fontFamily: C.font, fontSize: ".73rem", color: C.textSub, lineHeight: 1.58 }}>{children}</p>
     </div>;
 }
@@ -273,7 +273,7 @@ function CardHeader({ title, subtitle, icon, action, badge }) {
     gap: 8
   }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
-        <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: C.purpleBg, color: C.purpleAlt, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: C.blueBg, color: C.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {icon}
         </span>
         <div>
@@ -337,19 +337,19 @@ function Slider({ label, sublabel, icon, value, min = 0, max = 1, step = 0.05, o
   return <div style={{ padding: "13px 14px", background: C.bg, borderRadius: 11, border: `1px solid ${C.border}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ color: C.purpleAlt, display: "flex" }}>{icon}</span>
+          <span style={{ color: C.blueLight, display: "flex" }}>{icon}</span>
           <div>
             <p style={{ margin: 0, fontFamily: C.font, fontSize: ".79rem", fontWeight: 700, color: C.text }}>{label}</p>
             {sublabel && <p style={{ margin: 0, fontFamily: C.font, fontSize: ".67rem", color: C.textMuted }}>{sublabel}</p>}
           </div>
         </div>
-        <span style={{ fontFamily: C.font, fontSize: ".74rem", fontWeight: 800, color: C.purple, background: C.purpleLight, padding: "2px 9px", borderRadius: 6, minWidth: 40, textAlign: "center" }}>
+        <span style={{ fontFamily: C.font, fontSize: ".74rem", fontWeight: 800, color: C.blue, background: C.blueBg, padding: "2px 9px", borderRadius: 6, minWidth: 40, textAlign: "center" }}>
           {value.toFixed(2)}
         </span>
       </div>
       <div style={{ position: "relative", height: 20, display: "flex", alignItems: "center" }}>
         <div style={{ width: "100%", height: 5, background: C.border, borderRadius: 5, overflow: "hidden", position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${C.purple},${C.purpleAlt})`, borderRadius: 5 }} />
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${C.blue},${C.blueLight})`, borderRadius: 5 }} />
         </div>
         <input
     type="range"
@@ -365,7 +365,7 @@ function Slider({ label, sublabel, icon, value, min = 0, max = 1, step = 0.05, o
     width: 17,
     height: 17,
     borderRadius: "50%",
-    background: C.purple,
+    background: C.blue,
     border: "2.5px solid #fff",
     boxShadow: "0 1px 5px rgba(27,63,122,.4)",
     left: `calc(${pct}% - 8.5px)`,
@@ -400,25 +400,25 @@ function VoiceCard({ voice, selected, onSelect }) {
     padding: "10px 13px",
     borderRadius: 10,
     cursor: "pointer",
-    border: `1.5px solid ${selected ? C.purple : C.border}`,
+    border: `1.5px solid ${selected ? C.blue : C.border}`,
     background: selected ? "rgba(27,63,122,.05)" : C.white,
     transition: "border-color .15s, background .15s",
     position: "relative"
   }}>
-      {selected && <div style={{ position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: "50%", background: C.purple }} />}
+      {selected && <div style={{ position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: "50%", background: C.blue }} />}
       <div style={{
     width: 36,
     height: 36,
     borderRadius: "50%",
     flexShrink: 0,
-    background: selected ? C.purple : C.purpleBg,
+    background: selected ? C.blue : C.blueBg,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontFamily: C.font,
     fontSize: ".85rem",
     fontWeight: 800,
-    color: selected ? "#fff" : C.purpleAlt
+    color: selected ? "#fff" : C.blueLight
   }}>{voice.voice_name[0]}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ margin: 0, fontFamily: C.font, fontSize: ".81rem", fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{voice.voice_name}</p>
@@ -444,8 +444,8 @@ function VoiceCard({ voice, selected, onSelect }) {
     flexShrink: 0,
     border: "none",
     cursor: "pointer",
-    background: playing ? C.purple : C.purpleBg,
-    color: playing ? "#fff" : C.purpleAlt,
+    background: playing ? C.blue : C.blueBg,
+    color: playing ? "#fff" : C.blueLight,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -550,7 +550,7 @@ function KnowledgeBase() {
     }}
     onClick={() => toast("Knowledge base uploads coming soon")}
     style={{
-      border: `2px dashed ${drag ? C.purple : C.border}`,
+      border: `2px dashed ${drag ? C.blue : C.border}`,
       borderRadius: 11,
       padding: "22px 18px",
       display: "flex",
@@ -562,7 +562,7 @@ function KnowledgeBase() {
       transition: "border-color .15s, background .15s"
     }}
   >
-      <div style={{ width: 40, height: 40, borderRadius: 11, background: drag ? C.purple : C.purpleBg, color: drag ? "#fff" : C.purpleAlt, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .15s" }}>
+      <div style={{ width: 40, height: 40, borderRadius: 11, background: drag ? C.blue : C.blueBg, color: drag ? "#fff" : C.blueLight, display: "flex", alignItems: "center", justifyContent: "center", transition: "background .15s" }}>
         <Upload size={17} />
       </div>
       <div style={{ textAlign: "center" }}>
@@ -709,7 +709,7 @@ function SettingsPage() {
     return <div className="vx-st" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: C.bg }}>
         <style>{CSS}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 26, height: 26, border: `3px solid ${C.border}`, borderTopColor: C.purple, borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+          <div style={{ width: 26, height: 26, border: `3px solid ${C.border}`, borderTopColor: C.blue, borderRadius: "50%", animation: "spin .7s linear infinite" }} />
           <p style={{ fontFamily: C.font, fontSize: ".81rem", color: C.textMuted, margin: 0 }}>Loading settings…</p>
         </div>
       </div>;
@@ -903,7 +903,7 @@ function SettingsPage() {
           <KnowledgeBase />
           <div className="vx-g3">
             {["PDF catalogs", "Product specs", "Policy docs", "Shipping info", "FAQ sheets", "Promo flyers"].map((type) => <div key={type} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", borderRadius: 8, background: C.bg, border: `1px solid ${C.border}` }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.purpleAlt, flexShrink: 0 }} />
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.blueLight, flexShrink: 0 }} />
                 <span style={{ fontFamily: C.font, fontSize: ".71rem", fontWeight: 600, color: C.textSub }}>{type}</span>
               </div>)}
           </div>
@@ -963,7 +963,7 @@ function SettingsPage() {
     />
 
           {isCreatingPrompt && <div style={{ padding: "18px 20px", borderBottom: `1px solid ${C.border}`, background: "rgba(27,63,122,.03)", display: "flex", flexDirection: "column", gap: 13, animation: "fadeUp .2s ease both" }}>
-              <p style={{ margin: 0, fontFamily: C.font, fontSize: ".82rem", fontWeight: 800, color: C.purple }}>New Prompt</p>
+              <p style={{ margin: 0, fontFamily: C.font, fontSize: ".82rem", fontWeight: 800, color: C.blue }}>New Prompt</p>
               <Field label="Title">
                 <input autoFocus type="text" value={newPromptName} onChange={(e) => setNewPromptName(e.target.value)} placeholder="e.g. Weekend Script, Upsell Mode…" />
               </Field>
@@ -983,7 +983,7 @@ function SettingsPage() {
           {prompts.length === 0 && !isCreatingPrompt && <div style={{ padding: "44px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
               <span style={{ color: C.textLight }}>{codeIcon}</span>
               <p style={{ margin: 0, fontFamily: C.font, fontSize: ".82rem", color: C.textMuted, textAlign: "center" }}>
-                No prompts yet — click <strong style={{ color: C.purple }}>Add Prompt</strong> to create your first.
+                No prompts yet — click <strong style={{ color: C.blue }}>Add Prompt</strong> to create your first.
               </p>
             </div>}
 
@@ -1079,14 +1079,14 @@ function SettingsPage() {
         value={editName}
         onChange={(e) => setEditName(e.target.value)}
         placeholder="Prompt title…"
-        style={{ fontFamily: C.font, fontSize: ".83rem", fontWeight: 700, color: C.text, border: `1.5px solid ${C.purpleAlt}`, borderRadius: 8, padding: "8px 12px", background: C.white, outline: "none", width: "100%" }}
+        style={{ fontFamily: C.font, fontSize: ".83rem", fontWeight: 700, color: C.text, border: `1.5px solid ${C.blueLight}`, borderRadius: 8, padding: "8px 12px", background: C.white, outline: "none", width: "100%" }}
       />
                       <textarea
         rows={7}
         value={editText}
         onChange={(e) => setEditText(e.target.value)}
         placeholder="Prompt instructions…"
-        style={{ fontFamily: C.font, fontSize: ".79rem", color: C.text, border: `1.5px solid ${C.purpleAlt}`, borderRadius: 8, padding: "9px 12px", background: C.white, outline: "none", resize: "vertical", width: "100%", lineHeight: 1.65 }}
+        style={{ fontFamily: C.font, fontSize: ".79rem", color: C.text, border: `1.5px solid ${C.blueLight}`, borderRadius: 8, padding: "9px 12px", background: C.white, outline: "none", resize: "vertical", width: "100%", lineHeight: 1.65 }}
       />
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => setEditingPromptId(null)} style={{ flex: 1, fontFamily: C.font, fontSize: ".77rem", fontWeight: 600, color: C.textSub, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 7, padding: "8px 0", cursor: "pointer" }}>Cancel</button>
@@ -1118,7 +1118,7 @@ function SettingsPage() {
     gap: 13,
     flexWrap: "wrap"
   }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: assignedNumber ? C.purpleBg : C.border, display: "flex", alignItems: "center", justifyContent: "center", color: assignedNumber ? C.purpleAlt : C.textMuted }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: assignedNumber ? C.blueBg : C.border, display: "flex", alignItems: "center", justifyContent: "center", color: assignedNumber ? C.blueLight : C.textMuted }}>
               <Phone size={17} />
             </div>
             <div style={{ flex: 1, minWidth: 150 }}>
@@ -1181,21 +1181,21 @@ function SettingsPage() {
     gap: 12,
     flexWrap: "wrap"
   }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: C.purpleBg, color: C.purpleAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: C.blueBg, color: C.blueLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Link2 size={16} />
         </div>
         <div style={{ flex: 1, minWidth: 170 }}>
           <p style={{ margin: 0, fontFamily: C.font, fontSize: ".84rem", fontWeight: 800, color: C.text }}>Integrations are in development</p>
           <p style={{ margin: "2px 0 0", fontFamily: C.font, fontSize: ".72rem", color: C.textMuted, lineHeight: 1.5 }}>OAuth connections and API key management coming soon.</p>
         </div>
-        <span style={{ fontFamily: C.font, fontSize: ".66rem", fontWeight: 700, padding: "3px 9px", borderRadius: 100, background: C.purpleLight, color: C.purpleAlt, flexShrink: 0 }}>Q3 2026</span>
+        <span style={{ fontFamily: C.font, fontSize: ".66rem", fontWeight: 700, padding: "3px 9px", borderRadius: 100, background: C.blueBg, color: C.blueLight, flexShrink: 0 }}>Q3 2026</span>
       </div>
 
       <Card faded>
         <CardHeader title="Platform Connections" subtitle="Sync menus and orders automatically" icon={<Link2 size={14} />} badge={<PlannedBadge />} />
         <CardBody>
           {INTEGRATIONS.map((intg) => <div key={intg.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.bg, flexWrap: "wrap" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: C.purpleBg, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.purpleAlt }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: C.blueBg, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.blueLight }}>
                 <Link2 size={16} />
               </div>
               <div style={{ flex: 1, minWidth: 110 }}>
@@ -1219,7 +1219,7 @@ function SettingsPage() {
           <div className="vx-g3">
             {[{ name: "Uber Eats", cat: "Delivery" }, { name: "Lightspeed", cat: "Retail" }, { name: "Grubhub", cat: "Delivery" }, { name: "Checkmate", cat: "Aggregator" }].map((item) => <div key={item.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 9, border: `1px solid ${C.border}`, background: C.bg }}>
                 <p style={{ margin: 0, fontFamily: C.font, fontSize: ".78rem", fontWeight: 700, color: C.text, flex: 1 }}>{item.name}</p>
-                <span style={{ fontFamily: C.font, fontSize: ".61rem", fontWeight: 700, padding: "2px 7px", borderRadius: 100, background: C.purpleLight, color: C.purpleAlt, whiteSpace: "nowrap" }}>{item.cat}</span>
+                <span style={{ fontFamily: C.font, fontSize: ".61rem", fontWeight: 700, padding: "2px 7px", borderRadius: 100, background: C.blueBg, color: C.blueLight, whiteSpace: "nowrap" }}>{item.cat}</span>
               </div>)}
           </div>
         </CardBody>
@@ -1298,7 +1298,7 @@ function SettingsPage() {
     const on = activeSection === sec.id;
     return <button key={sec.id} onClick={() => setActiveSection(sec.id)} className={`vx-nav-item${on ? " vx-nav-on" : ""}`}>
                 <span className="vx-nav-icon">{sec.icon}</span>
-                <span className="vx-nav-label-txt" style={{ fontFamily: C.font, fontSize: ".79rem", fontWeight: on ? 700 : 500, color: on ? C.purple : C.textSub, whiteSpace: "nowrap", letterSpacing: "-.01em" }}>
+                <span className="vx-nav-label-txt" style={{ fontFamily: C.font, fontSize: ".79rem", fontWeight: on ? 700 : 500, color: on ? C.blue : C.textSub, whiteSpace: "nowrap", letterSpacing: "-.01em" }}>
                   {sec.label}
                 </span>
               </button>;

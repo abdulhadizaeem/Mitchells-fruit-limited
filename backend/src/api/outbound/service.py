@@ -68,8 +68,7 @@ def parse_recall_time(text: str) -> datetime | None:
     # Must contain a callback / call-later keyword
     TRIGGER_KEYWORDS = [
         "call later", "call back", "callback", "call again",
-        "call after", "call me", "ring me", "try again",
-        "not available", "busy", "call in", "call next", "call on",
+        "call after", "call me", "ring me", "call in", "call next", "call on",
     ]
     if not any(kw in low for kw in TRIGGER_KEYWORDS):
         return None
@@ -531,6 +530,15 @@ class OutboundCallingService:
             )
 
         call_status = updates["call_status"]
+        if call_status not in ("completed", "ended", "error", "failed"):
+            created_at = call.created_at
+            if created_at:
+                if created_at.tzinfo is None:
+                    created_at = created_at.replace(tzinfo=timezone.utc)
+                if datetime.now(timezone.utc) - created_at > timedelta(minutes=2):
+                    call_status = "failed"
+                    updates["call_status"] = "failed"
+
         if call_status in ("completed", "ended"):
             await repo.update_contact_status(db, call.contact_id, "completed")
         elif call_status in ("error", "failed"):
@@ -649,6 +657,7 @@ class OutboundCallingService:
                             log_record = res_log.scalar_one_or_none()
                             if log_record:
                                 log_record.order_booked = True
+                                log_record.call_successful = True
                                 log_record.order_items = summary_text
                                 await db.commit()
                         except Exception:
@@ -758,15 +767,30 @@ class OutboundCallingService:
                         await repo.update_contact(db, contact, **kwargs_updates)
 
             # ── Auto-detect recall time from call summary ──────────────────
+            # Only an EXPLICIT customer request ("call me back in an hour")
+            # schedules a callback. A call simply failing to connect
+            # (no-answer/busy/voicemail) is NOT treated as a callback request —
+            # that was causing surprise repeat calls with no user consent.
+            recall_dt = None
             if summary_text:
                 recall_dt = parse_recall_time(summary_text)
-                if recall_dt:
-                    contact = await repo.get_contact(db, call.contact_id)
-                    if contact:
-                        await repo.update_contact(db, contact, recall_at=recall_dt)
+
+            if recall_dt:
+                contact = await repo.get_contact(db, call.contact_id)
+                if contact:
+                    meta = contact.contact_metadata or {}
+                    attempts = meta.get("recall_attempts", 0)
+                    if attempts < 1:
+                        meta["recall_attempts"] = attempts + 1
+                        await repo.update_contact(db, contact, recall_at=recall_dt, contact_metadata=meta)
                         _logger.info(
-                            "Auto-set recall_at=%s for contact=%s from summary",
+                            "Auto-set recall_at=%s for contact=%s (one-time callback scheduled)",
                             recall_dt.isoformat(),
+                            call.contact_id,
+                        )
+                    else:
+                        _logger.info(
+                            "Callback already used for contact=%s — not scheduling another automatic call",
                             call.contact_id,
                         )
 
@@ -798,6 +822,7 @@ class OutboundCallingService:
                         if contact.status in ("calling",):
                             continue
                         try:
+                            _logger.warning(f"DEBUG_SCHEDULER: Picked up OutboundContact {contact.id} for dialing.")
                             # Clear recall_at before dialling so we don't loop
                             await repo.update_contact(db, contact, recall_at=None)
                             await self._dial_contact(db, campaign, contact)
@@ -821,7 +846,8 @@ class OutboundCallingService:
                     log_res = await db.execute(
                         select(CallLog).where(
                             CallLog.recall_at <= now_utc,
-                            CallLog.call_status.notin_(["ongoing", "calling", "ringing"])
+                            CallLog.call_status.notin_(["ongoing", "calling", "ringing"]),
+                            CallLog.direction == "inbound"
                         )
                     )
                     due_logs = log_res.scalars().all()
@@ -829,6 +855,7 @@ class OutboundCallingService:
                         if not log.caller_phone:
                             continue
                         try:
+                            _logger.warning(f"DEBUG_SCHEDULER: Picked up CallLog {log.call_id} (Direction: {log.direction}) for dialing.")
                             log.recall_at = None
                             await db.commit()
                             

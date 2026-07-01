@@ -40,7 +40,7 @@ const AGENTS_CSS = `
   .agent-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 30px rgba(27,63,122,0.05);
-    border-color: ${C.purpleAlt};
+    border-color: ${C.blueLight};
   }
 
   .deploy-modal-overlay {
@@ -58,12 +58,12 @@ const AGENTS_CSS = `
     transition: all 0.15s ease;
   }
   .voice-item-option:hover {
-    background: ${C.purpleLight};
-    border-color: ${C.purpleAlt};
+    background: ${C.blueBg};
+    border-color: ${C.blueLight};
   }
   .voice-item-option.selected {
-    background: ${C.purpleLight};
-    border-color: ${C.purple};
+    background: ${C.blueBg};
+    border-color: ${C.blue};
     box-shadow: 0 0 0 2px rgba(83, 74, 183, 0.15);
   }
 `;
@@ -192,7 +192,7 @@ function Agents() {
       display: "flex",
       alignItems: "center",
       gap: "8px",
-      background: C.purple,
+      background: C.blue,
       color: C.white,
       border: "none",
       borderRadius: "12px",
@@ -203,8 +203,8 @@ function Agents() {
       boxShadow: "0 4px 14px rgba(83, 74, 183, 0.2)",
       transition: "all 0.2s ease"
     }}
-    onMouseOver={(e) => e.currentTarget.style.background = C.purpleSolid}
-    onMouseOut={(e) => e.currentTarget.style.background = C.purple}
+    onMouseOver={(e) => e.currentTarget.style.background = C.blueSolid}
+    onMouseOut={(e) => e.currentTarget.style.background = C.blue}
   >
           <Plus size={16} />
           Deploy Agent
@@ -235,11 +235,11 @@ function Agents() {
       width: "48px",
       height: "48px",
       borderRadius: "12px",
-      background: C.purpleLight,
+      background: C.blueBg,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: C.purple
+      color: C.blue
     }}
   >
             <Bot size={24} />
@@ -278,7 +278,7 @@ function Agents() {
       width: "48px",
       height: "48px",
       borderRadius: "12px",
-      background: "rgba(29, 184, 122, 0.08)",
+      background: C.blueBg,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -321,11 +321,11 @@ function Agents() {
       width: "48px",
       height: "48px",
       borderRadius: "12px",
-      background: "rgba(83, 74, 183, 0.05)",
+      background: C.blueBg,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: C.purpleAlt
+      color: C.blue
     }}
   >
             <Cpu size={24} />
@@ -359,7 +359,7 @@ function Agents() {
       gap: "12px"
     }}
   >
-          <Loader2 className="animate-spin" size={32} color={C.purple} />
+          <Loader2 className="animate-spin" size={32} color={C.blue} />
           <span style={{ fontSize: "0.85rem", color: C.textSub }}>
             Fetching deployed agents...
           </span>
@@ -378,8 +378,8 @@ function Agents() {
       width: "64px",
       height: "64px",
       borderRadius: "50%",
-      background: C.purpleLight,
-      color: C.purple,
+      background: C.blueBg,
+      color: C.blue,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: "16px"
@@ -412,7 +412,7 @@ function Agents() {
           <button
     onClick={() => setModalOpen(true)}
     style={{
-      background: C.purple,
+      background: C.blue,
       color: C.white,
       border: "none",
       borderRadius: "10px",
@@ -704,7 +704,7 @@ function Agents() {
                   {voicesLoading && <Loader2
     className="animate-spin"
     size={14}
-    color={C.purple}
+    color={C.blue}
   />}
                 </div>
 
@@ -782,7 +782,7 @@ function Agents() {
       width: "20px",
       height: "20px",
       borderRadius: "50%",
-      background: selectedVoiceId === v.voice_id ? C.purple : C.textMuted,
+      background: selectedVoiceId === v.voice_id ? C.blue : C.textMuted,
       color: C.white,
       display: "flex",
       alignItems: "center",
@@ -849,7 +849,7 @@ function Agents() {
     type="submit"
     disabled={submitting}
     style={{
-      background: C.purple,
+      background: C.blue,
       color: C.white,
       border: "none",
       borderRadius: "10px",

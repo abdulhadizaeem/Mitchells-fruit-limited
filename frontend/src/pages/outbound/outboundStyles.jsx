@@ -16,7 +16,7 @@ export function Btn({
 }) {
   const variants = {
     primary: {
-      background: C.purple,
+      background: C.blue,
       color: "#fff",
       border: "none",
       padding: "8px 14px",
@@ -46,8 +46,8 @@ export function Btn({
       padding: 4,
     },
     link: {
-      background: C.purpleBg,
-      color: C.purple,
+      background: C.blueBg,
+      color: C.blue,
       border: "none",
       padding: "5px 10px",
       fontSize: ".75rem",
@@ -89,11 +89,11 @@ export function formatDuration(ms) {
 }
 
 export const STATUS_COLORS = {
-  draft: { bg: C.purpleBg, color: C.purple },
+  draft: { bg: C.blueBg, color: C.blue },
   active: { bg: C.blueBg, color: C.blue },
   paused: { bg: C.goldBg, color: C.gold },
   completed: { bg: C.blueBg, color: C.blue },
-  pending: { bg: C.purpleBg, color: C.purple },
+  pending: { bg: C.blueBg, color: C.blue },
   calling: { bg: C.goldBg, color: C.gold },
   failed: { bg: C.blueBg, color: C.blue },
   ended: { bg: C.blueBg, color: C.blue },
@@ -101,7 +101,7 @@ export const STATUS_COLORS = {
 };
 
 export function StatusBadge({ status }) {
-  const s = STATUS_COLORS[status] || { bg: C.purpleBg, color: C.purple };
+  const s = STATUS_COLORS[status] || { bg: C.blueBg, color: C.blue };
   return (
     <span
       style={{

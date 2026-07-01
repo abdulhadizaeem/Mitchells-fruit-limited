@@ -276,9 +276,9 @@ function SpecialModal({
       padding: "8px 10px",
       borderRadius: 8,
       cursor: "pointer",
-      background: f.discount_type === val ? C.purpleBg : C.inputBg,
-      color: f.discount_type === val ? C.purpleText : C.textSub,
-      border: `1.5px solid ${f.discount_type === val ? C.purpleBdr : C.inputBorder}`,
+      background: f.discount_type === val ? C.blueBg : C.inputBg,
+      color: f.discount_type === val ? C.blue : C.textSub,
+      border: `1.5px solid ${f.discount_type === val ? C.blueBdr : C.inputBorder}`,
       transition: "all .15s"
     }}
   >{label}</button>)}
@@ -482,7 +482,7 @@ function PreviewModal({
             </div> : sections.map((section, si) => <div key={section.title} style={{ animation: `fadeUp .3s ${si * 0.07}s both` }}>
                 
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 3, height: 16, borderRadius: 3, background: C.purple, flexShrink: 0 }} />
+                  <div style={{ width: 3, height: 16, borderRadius: 3, background: C.blue, flexShrink: 0 }} />
                   <h3 style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 800, color: C.text, textTransform: "uppercase", letterSpacing: ".08em", margin: 0 }}>
                     {section.title}
                   </h3>
@@ -509,7 +509,7 @@ function PreviewModal({
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.boxShadow = "0 6px 20px rgba(27,63,122,.14)";
-      e.currentTarget.style.borderColor = C.purpleBdr;
+      e.currentTarget.style.borderColor = C.blueBdr;
       e.currentTarget.style.transform = "translateY(-1px)";
     }}
     onMouseLeave={(e) => {
@@ -527,12 +527,12 @@ function PreviewModal({
       fontFamily: "'Sora',sans-serif",
       fontSize: 13,
       fontWeight: 800,
-      color: C.purpleText,
+      color: C.blue,
       flexShrink: 0,
-      background: C.purpleBg,
+      background: C.blueBg,
       padding: "2px 9px",
       borderRadius: 8,
-      border: `1px solid ${C.purpleBdr}`
+      border: `1px solid ${C.blueBdr}`
     }}
   >
                           {formatPKR(item.price)}
@@ -578,7 +578,7 @@ function PreviewModal({
       fontFamily: "'Sora',sans-serif",
       fontSize: 12,
       fontWeight: 700,
-      background: C.purple,
+      background: C.blue,
       color: "#fff",
       border: "none",
       borderRadius: 8,
@@ -654,7 +654,7 @@ function SpecialCard({
         <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}`, padding: "3px 10px", borderRadius: 7 }}>
           {special.discount_type === "percentage" ? `${special.discount_value}% off` : `${formatPKR(special.discount_value)} off`}
         </span>
-        {special.applicable_items && <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, background: C.purpleBg, color: C.purpleText, border: `1px solid ${C.purpleBdr}`, padding: "3px 10px", borderRadius: 7 }}>
+        {special.applicable_items && <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}`, padding: "3px 10px", borderRadius: 7 }}>
             📦 {special.applicable_items}
           </span>}
         {(special.valid_from || special.valid_until) && <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, color: C.textMuted }}>
@@ -752,7 +752,7 @@ function ModalActions({
     disabled={loading}
     style={{
       flex: 1,
-      background: C.purple,
+      background: C.blue,
       color: "#fff",
       border: "none",
       borderRadius: 10,
@@ -979,7 +979,7 @@ function Menu() {
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         @keyframes expandDown { from { opacity:0; transform:translateY(-6px); max-height:0; } to { opacity:1; transform:translateY(0); max-height:300px; } }
         .mn-topbar-tab { background: none; border: none; cursor: pointer; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; padding:10px 16px; color:${C.textMuted}; border-bottom:2px solid transparent; transition:color .15s, border-color .15s; display:flex; align-items:center; gap:6px; flex-shrink:0; }
-        .mn-topbar-tab.active { color:${C.text}; border-bottom-color:${C.purple}; font-weight:700; }
+        .mn-topbar-tab.active { color:${C.text}; border-bottom-color:${C.blue}; font-weight:700; }
         .mn-topbar-tab:hover:not(.active) { color:${C.textSub}; }
         .mn-stats-strip { display:flex; align-items:stretch; background:${C.card}; border-bottom:1px solid ${C.border}; flex-shrink:0; overflow-x:auto; animation:fadeIn .35s both; }
         .mn-stat-cell { display:flex; align-items:center; gap:10px; padding:11px 20px; border-right:1px solid ${C.borderFaint}; white-space:nowrap; }
@@ -987,7 +987,7 @@ function Menu() {
         .mn-cat-sidebar-group { position:relative; margin:2px 0; }
         .mn-cat-sidebar-btn { display:flex; align-items:flex-start; gap:8px; width:100%; padding:9px 10px; border:none; background:transparent; cursor:pointer; border-radius:8px; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; color:${C.textSub}; transition:background .12s, color .12s; text-align:left; }
         .mn-cat-sidebar-btn:hover:not(.active) { background:${C.inputBg}; color:${C.text}; }
-        .mn-cat-sidebar-btn.active { background:${C.purpleBg}; color:${C.purpleText}; }
+        .mn-cat-sidebar-btn.active { background:${C.blueBg}; color:${C.blue}; }
         .mn-cat-sidebar-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; display:block; }
         .mn-cat-count { transition:opacity .12s; margin-top:1px; }
         .mn-cat-sidebar-group:hover .mn-cat-count { opacity:0; }
@@ -997,19 +997,19 @@ function Menu() {
         .mn-row:hover { background:${C.rowHover}; }
         .mn-row.mn-row-off { background:rgba(217,65,64,.018); }
         .mn-row.mn-row-off:hover { background:rgba(217,65,64,.036); }
-        .mn-row.mn-row-sel { background:${C.purpleBg}; }
+        .mn-row.mn-row-sel { background:${C.blueBg}; }
         .mn-row.mn-row-sel:hover { background:rgba(27,63,122,.13); }
-        .mn-cb { width:15px; height:15px; accent-color:${C.purple}; cursor:pointer; flex-shrink:0; margin:0; }
+        .mn-cb { width:15px; height:15px; accent-color:${C.blue}; cursor:pointer; flex-shrink:0; margin:0; }
         .mn-action-btn { background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:5px; border-radius:6px; color:${C.textMuted}; transition:color .12s, background .12s; }
-        .mn-action-btn:hover { color:${C.purple}; background:${C.purpleBg}; }
+        .mn-action-btn:hover { color:${C.blue}; background:${C.blueBg}; }
         .mn-action-btn.del:hover { color:${C.blue}; background:${C.blueBg}; }
         .mn-search-wrap { display:flex; align-items:center; gap:8px; background:${C.card}; border:1.5px solid ${C.inputBorder}; border-radius:8px; padding:7px 12px; flex:1; min-width:0; max-width:280px; transition:border-color .15s, box-shadow .15s; }
-        .mn-search-wrap:focus-within { border-color:${C.purple}; box-shadow:0 0 0 3px ${C.purpleBdr}; }
+        .mn-search-wrap:focus-within { border-color:${C.blue}; box-shadow:0 0 0 3px ${C.blueBdr}; }
         .mn-search-input { background:none; border:none; outline:none; font-family:'Sora',sans-serif; font-size:13px; color:${C.text}; flex:1; min-width:0; }
         .mn-search-input::placeholder { color:${C.textGhost}; }
         .mn-pill-btn { font-family:'Sora',sans-serif; font-size:12px; font-weight:600; border-radius:7px; padding:5px 12px; cursor:pointer; border:1.5px solid transparent; transition:all .15s; white-space:nowrap; }
-        .mn-add-item-btn:hover { color:${C.purple} !important; background:${C.purpleBg} !important; border-color:${C.purpleBdr} !important; }
-        .mn-modal-inp:focus { border-color:${C.purple} !important; box-shadow:0 0 0 3px ${C.purpleBdr} !important; }
+        .mn-add-item-btn:hover { color:${C.blue} !important; background:${C.blueBg} !important; border-color:${C.blueBdr} !important; }
+        .mn-modal-inp:focus { border-color:${C.blue} !important; box-shadow:0 0 0 3px ${C.blueBdr} !important; }
         .mn-expanded-panel { animation:expandDown .18s both; overflow:hidden; }
         .mn-special-card { animation:fadeUp .3s both; }
       `}</style>
@@ -1033,7 +1033,7 @@ function Menu() {
             <button
     onClick={fetchCategories}
     disabled={loadingCats}
-    style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.purpleBg, color: C.purpleText, border: `1.5px solid ${C.purpleBdr}`, borderRadius: 8, padding: "6px 14px", cursor: loadingCats ? "not-allowed" : "pointer", opacity: loadingCats ? 0.6 : 1 }}
+    style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.blueBg, color: C.blue, border: `1.5px solid ${C.blueBdr}`, borderRadius: 8, padding: "6px 14px", cursor: loadingCats ? "not-allowed" : "pointer", opacity: loadingCats ? 0.6 : 1 }}
   >
               <RefreshCw size={13} style={{ animation: loadingCats ? "spin 1s linear infinite" : "none" }} />
               Sync
@@ -1050,7 +1050,7 @@ function Menu() {
             <span style={{ width: 1, height: 20, background: C.border, flexShrink: 0 }} />
             {mainTab === "menu" && activeCat && <button
     onClick={() => setItemModal(activeCat)}
-    style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.purple, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+    style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
   >
                 + Item
               </button>}
@@ -1059,7 +1059,7 @@ function Menu() {
       setSpecialModal("add");
       setEditSpecial(null);
     }}
-    style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.purple, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+    style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
   >
                 + Special
               </button>}
@@ -1143,7 +1143,7 @@ function Menu() {
 
       {!loadingCats && categories.length > 0 && <div className="mn-stats-strip">
           {[
-    { label: "Categories", value: categories.length, color: C.purple },
+    { label: "Categories", value: categories.length, color: C.blue },
     { label: "Total Items", value: totalItems, color: C.text },
     { label: "Available", value: allAvailItems, color: C.blue },
     ...allOffItems > 0 ? [{ label: "86'd", value: allOffItems, color: C.blue }] : [],
@@ -1192,10 +1192,10 @@ function Menu() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span className="mn-cat-sidebar-name">{cat.name}</span>
                             {catTotal > 0 && <div style={{ height: 3, borderRadius: 2, background: isActive ? "rgba(27,63,122,.18)" : C.borderFaint, marginTop: 5, overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${availPct * 100}%`, borderRadius: 2, background: isActive ? C.purple : barColor, transition: "width .35s ease" }} />
+                                <div style={{ height: "100%", width: `${availPct * 100}%`, borderRadius: 2, background: isActive ? C.blue : barColor, transition: "width .35s ease" }} />
                               </div>}
                           </div>
-                          <span className="mn-cat-count" style={{ fontSize: 10, background: isActive ? C.purpleBg : C.inputBg, color: isActive ? C.purpleText : C.textMuted, padding: "1px 7px", borderRadius: 8, fontWeight: 700, flexShrink: 0 }}>
+                          <span className="mn-cat-count" style={{ fontSize: 10, background: isActive ? C.blueBg : C.inputBg, color: isActive ? C.blue : C.textMuted, padding: "1px 7px", borderRadius: 8, fontWeight: 700, flexShrink: 0 }}>
                             {catAvail}/{catTotal}
                           </span>
                         </button>
@@ -1237,17 +1237,17 @@ function Menu() {
               </div> : !activeCat ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12, paddingTop: 80 }}>
                 <span style={{ fontSize: 48 }}>📦</span>
                 <p style={{ color: C.textMuted, fontSize: 13 }}>No categories yet.</p>
-                <button onClick={() => setCatModal("add")} style={{ fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 700, background: C.purple, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>
+                <button onClick={() => setCatModal("add")} style={{ fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 700, background: C.blue, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>
                   + Add First Category
                 </button>
               </div> : <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", animation: "fadeUp .28s both" }}>
                 
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.borderFaint}`, background: C.filtersBar, gap: 10, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 3, height: 16, borderRadius: 2, background: C.purple, flexShrink: 0 }} />
+                    <div style={{ width: 3, height: 16, borderRadius: 2, background: C.blue, flexShrink: 0 }} />
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{activeCat.name}</span>
                     {activeCat.description && <span style={{ fontSize: 12, color: C.textMuted }}>{activeCat.description}</span>}
-                    {(search || showUnavailOnly) && <span style={{ fontSize: 10, fontWeight: 700, background: C.purpleBg, color: C.purpleText, border: `1px solid ${C.purpleBdr}`, borderRadius: 4, padding: "1px 6px" }}>filtered</span>}
+                    {(search || showUnavailOnly) && <span style={{ fontSize: 10, fontWeight: 700, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}`, borderRadius: 4, padding: "1px 6px" }}>filtered</span>}
                   </div>
                   <div style={{ display: "flex", gap: 14, alignItems: "center", flexShrink: 0 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
@@ -1295,8 +1295,8 @@ function Menu() {
                 {
     /* Bulk action bar — visible when items are selected */
   }
-                {selectedItems.size > 0 && <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px 8px 12px", background: C.purpleBg, borderBottom: `1px solid ${C.purpleBdr}`, flexWrap: "wrap" }}>
-                    <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, color: C.purpleText }}>{selectedItems.size} selected</span>
+                {selectedItems.size > 0 && <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px 8px 12px", background: C.blueBg, borderBottom: `1px solid ${C.blueBdr}`, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, color: C.blue }}>{selectedItems.size} selected</span>
                     <button
     onClick={async () => {
       const ids = [...selectedItems];
@@ -1338,7 +1338,7 @@ function Menu() {
                 {filteredItems.length === 0 ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 0", gap: 10 }}>
                     <span style={{ fontSize: 36 }}>📦</span>
                     <p style={{ color: C.textMuted, fontSize: 13 }}>{search ? "No items match your search." : "No items yet."}</p>
-                    {!search && <button onClick={() => setItemModal(activeCat)} style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.purple, color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}>
+                    {!search && <button onClick={() => setItemModal(activeCat)} style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 700, background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer" }}>
                         + Add First Item
                       </button>}
                   </div> : <>
@@ -1370,7 +1370,7 @@ function Menu() {
       /* Name + expand caret */
     }
                             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                              <span style={{ color: expanded ? C.purple : C.textGhost, flexShrink: 0, transition: "transform .15s, color .15s", transform: expanded ? "rotate(90deg)" : "none", display: "flex" }}>
+                              <span style={{ color: expanded ? C.blue : C.textGhost, flexShrink: 0, transition: "transform .15s, color .15s", transform: expanded ? "rotate(90deg)" : "none", display: "flex" }}>
                                 <ChevronRight size={14} />
                               </span>
                               <div style={{ minWidth: 0 }}>  
@@ -1448,7 +1448,7 @@ function Menu() {
                           {
       /* Expanded detail panel */
     }
-                          {expanded && <div className="mn-expanded-panel" style={{ background: C.pageBg, borderBottom: `1px solid ${C.borderFaint}`, padding: "12px 16px 14px", borderLeft: `3px solid ${C.purple}` }}>
+                          {expanded && <div className="mn-expanded-panel" style={{ background: C.pageBg, borderBottom: `1px solid ${C.borderFaint}`, padding: "12px 16px 14px", borderLeft: `3px solid ${C.blue}` }}>
                               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingLeft: 22 }}>
                                 {item.description && <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", flex: "2 1 200px", minWidth: 0 }}>
                                     <p style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: ".06em", margin: "0 0 4px" }}>Description</p>
@@ -1466,7 +1466,7 @@ function Menu() {
                                   </div>}
                                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", flex: "0 0 auto" }}>
                                   <p style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: ".06em", margin: "0 0 4px" }}>Product ID</p>
-                                  <span style={{ fontFamily: "'Courier New', monospace", fontSize: 12, fontWeight: 700, background: C.purpleBg, color: C.purpleText, border: `1px solid ${C.purpleBdr}`, borderRadius: 6, padding: "3px 10px", display: "inline-block" }}>
+                                  <span style={{ fontFamily: "'Courier New', monospace", fontSize: 12, fontWeight: 700, background: C.blueBg, color: C.blue, border: `1px solid ${C.blueBdr}`, borderRadius: 6, padding: "3px 10px", display: "inline-block" }}>
                                     {item.id.slice(0, 8)}
                                   </span>
                                 </div>
@@ -1499,7 +1499,7 @@ function Menu() {
               <button onClick={() => {
     setSpecialModal("add");
     setEditSpecial(null);
-  }} style={{ fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 700, background: C.purple, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>
+  }} style={{ fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 700, background: C.blue, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>
                 + Add First Special
               </button>
             </div> : <>

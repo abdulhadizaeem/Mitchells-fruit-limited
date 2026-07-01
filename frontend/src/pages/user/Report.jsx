@@ -62,7 +62,7 @@ function KpiCard({
 }
 function SectionHeader({ icon, title, sub }) {
   return <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-      <span style={{ color: C.purple, display: "flex" }}>{icon}</span>
+      <span style={{ color: C.blue, display: "flex" }}>{icon}</span>
       <h3 style={{ fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>{title}</h3>
       {sub && <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, color: C.textMuted, marginLeft: 2 }}>{sub}</span>}
     </div>;
@@ -284,7 +284,7 @@ function Report() {
     return <div style={{ fontFamily: "'Sora',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: C.pageBg }}>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          <svg style={{ width: 28, height: 28, animation: "spin 1s linear infinite", color: C.purple }} fill="none" viewBox="0 0 24 24">
+          <svg style={{ width: 28, height: 28, animation: "spin 1s linear infinite", color: C.blue }} fill="none" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
             <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" style={{ opacity: 0.75 }} />
           </svg>
@@ -324,7 +324,7 @@ function Report() {
       <div style={{ background: C.topBar, borderBottom: `1px solid ${C.border}`, boxShadow: "0 1px 8px rgba(0,0,0,.05)", flexShrink: 0, padding: "11px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: 15, fontWeight: 700, color: C.text, margin: 0, display: "flex", alignItems: "center", gap: 7 }}>
-            <TrendingUp size={15} style={{ color: C.purple }} /> Analytics
+            <TrendingUp size={15} style={{ color: C.blue }} /> Analytics
           </h1>
           <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, color: C.textMuted }}>
             {data.period_days === 1 ? "Today" : `Last ${data.period_days} days`}
@@ -376,9 +376,9 @@ function Report() {
     label="Calls Received"
     value={s.total_calls}
     icon={<Phone size={15} />}
-    color={C.purple}
-    bg={C.purpleBg}
-    bdr={C.purpleBdr}
+    color={C.blue}
+    bg={C.blueBg}
+    bdr={C.blueBdr}
     delay={0}
     sub={`${handledCalls} handled`}
   />
@@ -447,7 +447,7 @@ function Report() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, animation: "fadeUp .4s .18s both" }}>
           <div className="rp-card">
             <SectionHeader icon={<Phone size={14} />} title="Calls Over Time" sub={`${data.calls_over_time.reduce((a, d) => a + d.calls, 0)} total`} />
-            <LineChart color={C.purple} label="calls" data={data.calls_over_time.map((d) => ({ date: d.date, value: d.calls }))} />
+            <LineChart color={C.blue} label="calls" data={data.calls_over_time.map((d) => ({ date: d.date, value: d.calls }))} />
           </div>
           <div className="rp-card">
             <SectionHeader icon={<ShoppingBag size={14} />} title="Orders Over Time" sub={`${data.orders_over_time.reduce((a, d) => a + d.orders, 0)} total`} />
@@ -462,7 +462,7 @@ function Report() {
             <SectionHeader icon={<PhoneCall size={14} />} title="Call Performance" />
             <div style={{ display: "flex", gap: 12, justifyContent: "space-around", marginBottom: 16 }}>
               <RingProgress pct={successRate} color={successColor} label="Success" value={`${successRate}%`} />
-              <RingProgress pct={convRate} color={C.purple} label="Conversion" value={`${convRate}%`} />
+              <RingProgress pct={convRate} color={C.blue} label="Conversion" value={`${convRate}%`} />
               <RingProgress pct={returnRate} color={C.blue} label="Return" value={`${returnRate}%`} />
             </div>
             <StatRow label="Successful" value={s.successful_calls} color={C.blue} />
@@ -487,12 +487,12 @@ function Report() {
           <div className="rp-card">
             <SectionHeader icon={<ShoppingBag size={14} />} title="Order Types" />
             <HBar items={[
-    { label: "Pickup", value: s.order_type_distribution.pickup, total: s.total_orders, color: C.purple, icon: <Store size={12} /> },
+    { label: "Pickup", value: s.order_type_distribution.pickup, total: s.total_orders, color: C.blue, icon: <Store size={12} /> },
     { label: "Delivery", value: s.order_type_distribution.delivery, total: s.total_orders, color: C.blue, icon: <Truck size={12} /> }
   ]} />
             <div style={{ marginTop: 18 }}>
               <StatRow label="Total Orders" value={s.total_orders} />
-              <StatRow label="Conversion Rate" value={`${convRate}%`} color={C.purple} />
+              <StatRow label="Conversion Rate" value={`${convRate}%`} color={C.blue} />
             </div>
           </div>
 
@@ -502,7 +502,7 @@ function Report() {
               <SectionHeader icon={<Users size={14} />} title="Customer Mix" />
               {totalCallers > 0 ? <DonutChart
     data={{ "New": s.new_callers, "Returning": s.repeat_callers }}
-    colors={{ New: C.purple, Returning: C.blue }}
+    colors={{ New: C.blue, Returning: C.blue }}
     centerLabel="callers"
   /> : <p style={{ fontFamily: "'Sora',sans-serif", fontSize: 12, color: C.textMuted, textAlign: "center", padding: "28px 0" }}>
                   No caller data yet
@@ -510,7 +510,7 @@ function Report() {
             </div>
             <div style={{ flex: 1, paddingTop: 4 }}>
               <p style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: ".07em", margin: "0 0 8px" }}>Breakdown</p>
-              <StatRow label="New Callers" value={s.new_callers} color={C.purple} />
+              <StatRow label="New Callers" value={s.new_callers} color={C.blue} />
               <StatRow label="Returning Callers" value={s.repeat_callers} color={C.blue} />
               <StatRow label="Return Rate" value={`${returnRate}%`} color={returnRate >= 30 ? C.blue : C.textMuted} />
               <StatRow label="Total Unique Callers" value={totalCallers} />
@@ -541,7 +541,7 @@ function Report() {
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,.07)";
-      e.currentTarget.style.borderColor = C.purpleBdr;
+      e.currentTarget.style.borderColor = C.blueBdr;
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.boxShadow = "none";
@@ -553,13 +553,13 @@ function Report() {
     height: 32,
     borderRadius: "50%",
     flexShrink: 0,
-    background: i === 0 ? C.purpleBg : i === 1 ? C.purpleBg : i === 2 ? C.blueBg : C.inputBg,
-    border: `1.5px solid ${i === 0 ? C.purpleBdr : i === 1 ? C.purpleBdr : i === 2 ? C.blueBdr : C.border}`,
+    background: C.blueBg,
+    border: `1.5px solid ${C.blueBdr}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center"
   }}>
-                    <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 800, color: i === 0 ? C.purple : i === 1 ? C.purple : i === 2 ? C.blue : C.textMuted }}>
+                    <span style={{ fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 800, color: C.blue }}>
                       {i + 1}
                     </span>
                   </div>
@@ -575,9 +575,9 @@ function Report() {
     fontFamily: "'Sora',sans-serif",
     fontSize: 12,
     fontWeight: 800,
-    background: C.purpleBg,
-    color: C.purpleText,
-    border: `1px solid ${C.purpleBdr}`,
+    background: C.blueBg,
+    color: C.blue,
+    border: `1px solid ${C.blueBdr}`,
     borderRadius: 8,
     padding: "3px 10px",
     flexShrink: 0
