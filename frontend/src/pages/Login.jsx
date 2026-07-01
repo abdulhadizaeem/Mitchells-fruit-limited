@@ -514,12 +514,12 @@ function SignIn() {
               </button>
             </form>
 
-            <p style={{ marginTop: "20px", textAlign: "center", fontSize: ".85rem", color: "#5F5F6E" }}>
+            {/* <p style={{ marginTop: "20px", textAlign: "center", fontSize: ".85rem", color: "#5F5F6E" }}>
               Don&apos;t have an account?{" "}
               <Link to="/register" style={{ color: BRAND.blue, fontWeight: 700, textDecoration: "none" }}>
                 Sign Up
               </Link>
-            </p>
+            </p> */}
 
             <p style={{ marginTop: "28px", textAlign: "center", fontSize: ".78rem", color: "#C0C0D0" }}>
               Mitchell&apos;s Fruit Farms Ltd. · Pakistan

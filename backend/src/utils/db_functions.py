@@ -841,6 +841,7 @@ async def get_dashboard_stats(db: AsyncSession, days: int = 7) -> dict:
     Calculates total calls, total orders, call minutes, success rates, etc.
     """
     from datetime import datetime, timedelta, timezone
+    # pyrefly: ignore [missing-import]
     from sqlalchemy import func, select, or_
     from src.utils.db import CallLog, Order, Caller
     since = datetime.now(timezone.utc) - timedelta(days=days)
@@ -932,6 +933,7 @@ async def get_calls_over_time(db: AsyncSession, days: int = 7) -> list:
     Groups call volumes by day (SQL cast to Date) over the last N days.
     """
     from datetime import datetime, timedelta, timezone
+    # pyrefly: ignore [missing-import]
     from sqlalchemy import func, select, cast, Date
     from src.utils.db import CallLog
     
@@ -961,6 +963,7 @@ async def get_orders_over_time(db: AsyncSession, days: int = 7) -> list:
     by day over the last N days.
     """
     from datetime import datetime, timedelta, timezone
+    # pyrefly: ignore [missing-import]
     from sqlalchemy import func, select, cast, Date
     from src.utils.db import Order, CallLog
     

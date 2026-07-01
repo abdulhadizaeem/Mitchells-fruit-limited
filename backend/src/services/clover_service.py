@@ -6,6 +6,7 @@
 import logging
 import os
 
+# pyrefly: ignore [missing-import]
 import httpx
 
 _logger = logging.getLogger(__name__)

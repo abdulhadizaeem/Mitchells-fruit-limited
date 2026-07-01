@@ -5,9 +5,11 @@
 import os
 import hashlib
 
+# pyrefly: ignore [missing-import]
 import aiosmtplib
 from email.message import EmailMessage
 from datetime import datetime, timezone
+# pyrefly: ignore [missing-import]
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.utils.db import User
@@ -27,6 +29,7 @@ from src.utils.jwt_handler import (
     create_password_reset_token,
 )
 from fastapi import HTTPException, status
+# pyrefly: ignore [missing-import]
 from sqlalchemy import select
 
 # SMTP configurations for sending password reset emails

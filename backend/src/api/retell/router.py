@@ -482,6 +482,7 @@ async def get_orders(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    # pyrefly: ignore [missing-import]
     from sqlalchemy import func as sa_func, select as sa_select
     from src.utils.db import Order
     count_query = sa_select(sa_func.count()).select_from(Order)
@@ -548,6 +549,7 @@ async def reprint_order(
         )
 
     from src.services import clover_service
+    # pyrefly: ignore [missing-import]
     import httpx
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -1408,7 +1410,31 @@ async def log_trade_inquiry(request: Request, db: AsyncSession = Depends(get_db)
         await db.rollback()
         print(f"[TRADE INQUIRY] ❌ FAILED: {type(exc).__name__}: {exc}")
         return {"success": False, "message": f"Failed to save inquiry: {exc}"}
-        
+    # ── Try to price the trade inquiry against the product catalog ──────
+    structured_items = await auto_extract_order_items(
+        db,
+        order_items_text=args.get("product_interest", ""),
+    )
+    order_total = None
+    if structured_items:
+        order_total = round(sum(i["price"] * i["quantity"] for i in structured_items), 2)
+        try:
+            await create_order(
+                db,
+                caller_phone=caller_phone or "Unknown",
+                customer_name=customer_name or "Guest",
+                order_items=structured_items,
+                order_type="B2B Trade Inquiry",
+                delivery_address=None,
+                total_amount=order_total,
+                special_notes=None,
+                call_id=call_id,
+            )
+            print(f"[TRADE INQUIRY] ✅ Order priced: {len(structured_items)} item(s), total {order_total}")
+        except Exception as exc:
+            print(f"[TRADE INQUIRY] ⚠ Order creation failed (inquiry still saved): {exc}")
+    else:
+        print("[TRADE INQUIRY] ⚠ No catalog items matched product_interest — Total will stay blank")    
     if call_id:
         if caller_phone:
             await upsert_caller(db, caller_phone, customer_name or None)
