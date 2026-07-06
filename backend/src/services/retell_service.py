@@ -83,7 +83,7 @@ async def create_phone_call(
     }
     if agent_id:
         payload["override_agent_id"] = agent_id
-        payload["override_agent_version"] = 0
+        #payload["override_agent_version"] = 0
     if metadata:
         payload["metadata"] = metadata
     if dynamic_variables:
