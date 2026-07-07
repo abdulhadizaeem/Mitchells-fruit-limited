@@ -267,17 +267,19 @@ async def update_contact(
     contact = await repo.get_contact(db, contact_id)
     if not contact:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
-    
+
+    # Only pass fields the client actually sent — otherwise unset fields
+    # (which default to None on the schema) overwrite existing values,
+    # including NOT NULL columns like phone_number, causing a DB error.
+    update_fields = body.model_dump(exclude_none=True, exclude_unset=True)
+
     updated_contact = await repo.update_contact(
         db,
         contact,
-        name=body.name,
-        phone_number=body.phone_number,
-        language_preference=body.language_preference,
-        company=body.company,
-        recall_at=body.recall_at,
+        **update_fields,
     )
     return _contact_response(updated_contact)
+
 
 
 class RecallRequest(BaseModel):

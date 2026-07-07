@@ -97,6 +97,19 @@ class VoicesResponse(BaseModel):
     current_provider: str
 
 
+# The 3 curated voices selectable from the dashboard — confirmed available in this Retell workspace.
+DEFAULT_VOICES: list[VoiceItem] = [
+    VoiceItem(voice_id="11labs-Monika", voice_name="Monika (en-IN)", provider="elevenlabs",
+              gender="female", accent="indian", age="middle aged", preview_audio_url=None),
+    VoiceItem(voice_id="11labs-Samad", voice_name="Samad (en-IN)", provider="elevenlabs",
+              gender="male", accent="indian", age="middle aged", preview_audio_url=None),
+    VoiceItem(voice_id="11labs-Hailey", voice_name="Hailey", provider="elevenlabs",
+              gender="female", accent="american", age="young", preview_audio_url=None),
+]
+
+ALLOWED_VOICE_IDS: set[str] = {v.voice_id for v in DEFAULT_VOICES}
+
+
 class AgentLiveResponse(BaseModel):
     voice_id: str
     voice_speed: float | None = None
@@ -162,88 +175,40 @@ async def get_voices(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    # Fetch current settings from DB as a base fallback for the voice ID and provider
     try:
         settings = await get_agent_settings(db)
-        current_voice_id = settings.voice_id or "11labs-Valentina"
+        current_voice_id = settings.voice_id or DEFAULT_VOICES[0].voice_id
     except Exception:
-        current_voice_id = "11labs-Valentina"
-    
+        current_voice_id = DEFAULT_VOICES[0].voice_id
+
     current_provider = _detect_provider(current_voice_id)
 
-    # Try calling Retell API, but if it fails/is unconfigured, fallback gracefully
     try:
-        agent = await retell_service.get_agent()
-        if agent:
-            current_voice_id = agent.get("voice_id", current_voice_id)
-            current_provider = _detect_provider(current_voice_id)
-            all_voices = await retell_service.list_voices()
-            
-            allowed_accents = {"american", "british", "australian", "canadian", "irish", "south african", "new zealand"}
-            filtered = [
-                VoiceItem(
-                    voice_id=v.get("voice_id", ""),
-                    voice_name=v.get("voice_name", ""),
-                    provider=v.get("provider", ""),
-                    gender=v.get("gender", ""),
-                    accent=v.get("accent"),
-                    age=v.get("age"),
-                    preview_audio_url=v.get("preview_audio_url"),
-                )
-                for v in all_voices
-                if _detect_provider(v.get("voice_id", "")) == current_provider
-                and str(v.get("gender", "")).lower() == "female"
-                and str(v.get("accent", "")).lower() in allowed_accents
-            ]
-            filtered = filtered[:10]
-            if filtered:
-                return VoicesResponse(voices=filtered, current_voice_id=current_voice_id, current_provider=current_provider)
+        all_voices = await retell_service.list_voices()
+        by_id = {v.get("voice_id"): v for v in all_voices}
+        voices = []
+        for dv in DEFAULT_VOICES:
+            live = by_id.get(dv.voice_id)
+            if live:
+                voices.append(VoiceItem(
+                    voice_id=dv.voice_id,
+                    voice_name=dv.voice_name,
+                    provider=dv.provider,
+                    gender=dv.gender,
+                    accent=dv.accent,
+                    age=dv.age,
+                    preview_audio_url=live.get("preview_audio_url"),
+                ))
+            else:
+                voices.append(dv)
     except Exception as e:
-        logger.error("Failed to fetch voices from Retell (falling back to default list): %s", e)
+        logger.error("Failed to fetch preview URLs from Retell (using curated defaults as-is): %s", e)
+        voices = DEFAULT_VOICES
 
-    # Robust local fallback list of popular/standard voices so the settings UI always loads
-    fallback_voices = [
-        VoiceItem(
-            voice_id="11labs-Valentina",
-            voice_name="Valentina",
-            provider="elevenlabs",
-            gender="female",
-            accent="american",
-            age="young",
-            preview_audio_url=None
-        ),
-        VoiceItem(
-            voice_id="11labs-Rachel",
-            voice_name="Rachel",
-            provider="elevenlabs",
-            gender="female",
-            accent="american",
-            age="young",
-            preview_audio_url=None
-        ),
-        VoiceItem(
-            voice_id="openai-Alloy",
-            voice_name="Alloy",
-            provider="openai",
-            gender="female",
-            accent="american",
-            age="young",
-            preview_audio_url=None
-        ),
-        VoiceItem(
-            voice_id="openai-Shimmer",
-            voice_name="Shimmer",
-            provider="openai",
-            gender="female",
-            accent="american",
-            age="young",
-            preview_audio_url=None
-        ),
-    ]
     return VoicesResponse(
-        voices=fallback_voices,
+        voices=voices,
         current_voice_id=current_voice_id,
-        current_provider=current_provider
+        current_provider=current_provider,
     )
 
 
