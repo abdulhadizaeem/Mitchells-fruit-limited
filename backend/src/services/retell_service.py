@@ -308,6 +308,40 @@ def verify_webhook_signature(payload_bytes: bytes, signature_header: str, secret
     return hmac.compare_digest(expected, signature_header)
 
 
+def extract_transcript_from_call(call_data: dict) -> str | None:
+    text = call_data.get("transcript")
+    if isinstance(text, str) and text.strip():
+        return text.strip()
+
+    for key in (
+        "transcript_with_tool_calls",
+        "scrubbed_transcript_with_tool_calls",
+        "transcript_object",
+    ):
+        obj = call_data.get(key)
+        if not obj:
+            continue
+        if isinstance(obj, str) and obj.strip():
+            return obj.strip()
+        if not isinstance(obj, list):
+            continue
+        lines: list[str] = []
+        for entry in obj:
+            if not isinstance(entry, dict):
+                continue
+            role = entry.get("role") or entry.get("speaker") or ""
+            content = entry.get("content") or entry.get("text") or ""
+            if isinstance(content, list):
+                content = " ".join(str(part) for part in content)
+            content = str(content).strip()
+            if not content:
+                continue
+            lines.append(f"{role}: {content}" if role else content)
+        if lines:
+            return "\n".join(lines)
+    return None
+
+
 def build_caller_dynamic_variables(caller: Caller | None, from_number: str) -> dict:
     """
     Helper: Prepares the dynamic parameters dictionary about a caller

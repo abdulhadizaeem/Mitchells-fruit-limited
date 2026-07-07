@@ -7,6 +7,8 @@ from src.api.outbound.utils import (
     parse_csv_contacts,
     parse_json_contacts,
     merge_contact_payload,
+    map_retell_call_status,
+    contact_status_for_call_status,
 )
 
 
@@ -79,3 +81,28 @@ def test_parse_csv_with_outbound_columns():
     assert contacts[0]["company"] == "Fresh Mart"
     assert contacts[0]["name"] == "Sara Ali"
     assert contacts[0]["metadata"]["customer_city"] == "Karachi"
+
+
+def test_map_retell_call_status_started():
+    assert map_retell_call_status({"call_status": "registered"}, "call_started") == "ongoing"
+
+
+def test_map_retell_call_status_ended_event():
+    data = {"call_status": "ongoing", "end_timestamp": 1714608491736}
+    assert map_retell_call_status(data, "call_ended") == "ended"
+
+
+def test_map_retell_call_status_analyzed_event():
+    data = {"call_status": "ongoing"}
+    assert map_retell_call_status(data, "call_analyzed") == "ended"
+
+
+def test_map_retell_call_status_not_connected():
+    data = {"call_status": "not_connected"}
+    assert map_retell_call_status(data, "call_ended") == "failed"
+
+
+def test_contact_status_for_call_status():
+    assert contact_status_for_call_status("ended") == "completed"
+    assert contact_status_for_call_status("ongoing") == "calling"
+    assert contact_status_for_call_status("failed") == "failed"

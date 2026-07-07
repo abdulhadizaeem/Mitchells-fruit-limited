@@ -9,6 +9,47 @@ CAMPAIGN_STATUSES = {"draft", "active", "paused", "completed"}
 CONTACT_STATUSES = {"pending", "calling", "completed", "failed"}
 CUSTOMER_TYPES = {"new", "existing"}
 
+OUTBOUND_CALL_STATUSES = frozenset({
+    "registered", "ongoing", "ended", "completed", "failed",
+})
+RETELL_FAILED_STATUSES = frozenset({"error", "not_connected"})
+
+
+def map_retell_call_status(call_data: dict, event_type: str = "") -> str | None:
+    event = (event_type or "").strip().lower()
+    retell = (call_data.get("call_status") or "").strip().lower()
+
+    if event == "call_started":
+        return "ongoing"
+
+    if event in ("call_ended", "call_analyzed", "post_call_analysis"):
+        if retell in RETELL_FAILED_STATUSES:
+            return "failed"
+        return "ended"
+
+    if retell in RETELL_FAILED_STATUSES:
+        return "failed"
+    if retell == "ended" or call_data.get("end_timestamp"):
+        return "ended"
+    if retell == "ongoing":
+        return "ongoing"
+    if retell == "registered":
+        return "registered"
+
+    return None
+
+
+def contact_status_for_call_status(call_status: str | None) -> str | None:
+    if not call_status:
+        return None
+    if call_status in ("ended", "completed"):
+        return "completed"
+    if call_status == "failed":
+        return "failed"
+    if call_status == "ongoing":
+        return "calling"
+    return None
+
 OUTBOUND_META_KEYS = (
     "shop_name",
     "owner_name",

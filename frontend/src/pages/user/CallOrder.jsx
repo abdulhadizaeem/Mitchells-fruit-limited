@@ -100,8 +100,13 @@ function getSentiment(c) {
   if (!c.user_sentiment) return null;
   return SENTIMENT_MAP[c.user_sentiment.toLowerCase()] ?? null;
 }
+function isLiveCall(c) {
+  if (c.end_timestamp) return false;
+  const status = (c.call_status || "").toLowerCase();
+  return ["ongoing", "registered", "ringing", "started", "calling", "in_progress"].includes(status);
+}
 function getOutcome(c) {
-  if (c.call_status === "ongoing")
+  if (isLiveCall(c))
     return { label: "Live", color: C.blue, bg: C.blueBg, border: C.blueBdr };
   if (c.recall_at)
     return { label: "Callback", color: C.blue, bg: C.blueBg, border: C.blueBdr };
@@ -1902,6 +1907,8 @@ function CallsOrders() {
     fetchCalls();
     fetchMenuItems();
     fetchSettings();
+    const pollId = setInterval(() => fetchCalls(true), 30000);
+    return () => clearInterval(pollId);
   }, []);
   useEffect(() => {
     if (!loading) requestAnimationFrame(() => setMounted(true));

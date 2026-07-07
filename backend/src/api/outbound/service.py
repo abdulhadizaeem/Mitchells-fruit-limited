@@ -13,10 +13,13 @@ from src.utils.db import AsyncSessionLocal
 from src.api.outbound import repository as repo
 from src.api.outbound.utils import (
     validate_phone_number,
+    normalize_phone_number,
     CAMPAIGN_STATUSES,
     merge_contact_payload,
     format_last_order,
     clean_customer_value,
+    map_retell_call_status,
+    contact_status_for_call_status,
 )
 from src.utils.db_functions import (
     get_caller_by_phone,
@@ -514,13 +517,26 @@ class OutboundCallingService:
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"Failed to sync: {exc}",
             )
+        sync_event = (
+            "call_analyzed"
+            if retell_data.get("call_analysis")
+            else "call_ended"
+            if retell_data.get("end_timestamp")
+            else ""
+        )
+        mapped_status = (
+            map_retell_call_status(retell_data, sync_event)
+            or retell_data.get("call_status", call.call_status)
+        )
         updates = {
-            "call_status": retell_data.get("call_status", call.call_status),
+            "call_status": mapped_status,
             "duration": retell_data.get("duration_ms"),
             "recording_url": retell_data.get("recording_url"),
-            "transcript": retell_data.get("transcript"),
             "start_timestamp": retell_data.get("start_timestamp"),
         }
+        transcript = retell_service.extract_transcript_from_call(retell_data)
+        if transcript:
+            updates["transcript"] = transcript
         analysis = retell_data.get("call_analysis") or {}
         if analysis.get("call_summary"):
             updates["summary"] = analysis["call_summary"]
@@ -530,7 +546,7 @@ class OutboundCallingService:
             )
 
         call_status = updates["call_status"]
-        if call_status not in ("completed", "ended", "error", "failed"):
+        if call_status not in ("completed", "ended", "failed"):
             created_at = call.created_at
             if created_at:
                 if created_at.tzinfo is None:
@@ -539,10 +555,9 @@ class OutboundCallingService:
                     call_status = "failed"
                     updates["call_status"] = "failed"
 
-        if call_status in ("completed", "ended"):
-            await repo.update_contact_status(db, call.contact_id, "completed")
-        elif call_status in ("error", "failed"):
-            await repo.update_contact_status(db, call.contact_id, "failed")
+        contact_status = contact_status_for_call_status(call_status)
+        if contact_status:
+            await repo.update_contact_status(db, call.contact_id, contact_status)
 
         # Extract name and company from summary if not in dynamic variables
         collected = retell_data.get("collected_dynamic_variables") or {}
@@ -689,16 +704,14 @@ class OutboundCallingService:
                 return
         updates = {}
         if event_type in ("call_started",):
-            updates["call_status"] = "ongoing"
             updates["started_at"] = datetime.now(timezone.utc)
             if call_data.get("start_timestamp"):
                 updates["start_timestamp"] = call_data.get("start_timestamp")
-            await repo.update_contact_status(db, call.contact_id, "calling")
         elif event_type in ("call_ended",):
-            updates["call_status"] = call_data.get("call_status", "ended")
-            updates["duration"] = call_data.get("duration_ms")
-            updates["transcript"] = call_data.get("transcript")
-            updates["recording_url"] = call_data.get("recording_url")
+            if call_data.get("duration_ms") is not None:
+                updates["duration"] = call_data.get("duration_ms")
+            if call_data.get("recording_url"):
+                updates["recording_url"] = call_data.get("recording_url")
             if call_data.get("start_timestamp"):
                 updates["start_timestamp"] = call_data.get("start_timestamp")
             if call_data.get("end_timestamp"):
@@ -706,10 +719,6 @@ class OutboundCallingService:
                     call_data["end_timestamp"] / 1000, tz=timezone.utc
                 )
 
-            c_status = "failed" if updates["call_status"] == "error" else "completed"
-            await repo.update_contact_status(db, call.contact_id, c_status)
-
-            # Auto-extract and update contact name if caller name was extracted during the call
             collected = call_data.get("collected_dynamic_variables") or {}
             extracted_company = _extract_company_from_data(collected)
             extracted_name = None
@@ -729,19 +738,25 @@ class OutboundCallingService:
                     if kwargs_updates:
                         await repo.update_contact(db, contact, **kwargs_updates)
 
-        elif event_type in ("transcript_ready",):
-            updates["transcript"] = call_data.get("transcript")
+        elif event_type in ("transcript_ready", "transcript_updated"):
+            pass
         elif event_type in ("recording_ready",):
             updates["recording_url"] = call_data.get("recording_url")
         elif event_type in ("post_call_analysis", "call_analyzed"):
             analysis = call_data.get("call_analysis") or {}
             summary_text = analysis.get("call_summary", "")
             updates["summary"] = summary_text
+            if call_data.get("duration_ms") is not None:
+                updates["duration"] = call_data.get("duration_ms")
+            if call_data.get("recording_url"):
+                updates["recording_url"] = call_data.get("recording_url")
+            if call_data.get("start_timestamp"):
+                updates["start_timestamp"] = call_data.get("start_timestamp")
+            if call_data.get("end_timestamp"):
+                updates["ended_at"] = datetime.fromtimestamp(
+                    call_data["end_timestamp"] / 1000, tz=timezone.utc
+                )
 
-            c_status = "failed" if call_data.get("call_status") == "error" else "completed"
-            await repo.update_contact_status(db, call.contact_id, c_status)
-
-            # Auto-extract and update contact name
             collected = call_data.get("collected_dynamic_variables") or {}
             custom = call_data.get("custom_analysis_data") or {}
             analysis_custom = analysis.get("custom_analysis_data") or {}
@@ -794,42 +809,116 @@ class OutboundCallingService:
                             call.contact_id,
                         )
 
+        if event_type in (
+            "call_ended",
+            "call_analyzed",
+            "post_call_analysis",
+            "transcript_ready",
+            "transcript_updated",
+        ):
+            transcript = retell_service.extract_transcript_from_call(call_data)
+            if transcript:
+                updates["transcript"] = transcript
+
+        mapped_status = map_retell_call_status(call_data, event_type)
+        if mapped_status:
+            updates["call_status"] = mapped_status
+            contact_status = contact_status_for_call_status(mapped_status)
+            if contact_status:
+                await repo.update_contact_status(
+                    db, call.contact_id, contact_status
+                )
+
         if updates:
             await repo.update_outbound_call(db, call, **updates)
             _logger.info(
-                "Webhook %s processed for retell_call=%s",
+                "Outbound webhook event=%s call=%s retell_status=%s "
+                "mapped_status=%s",
                 event_type,
                 retell_call_id,
+                call_data.get("call_status"),
+                updates.get("call_status"),
             )
 
     # ── Auto-dialer scheduler ────────────────────────────────────────────────
 
+    async def _build_call_log_recall_variables(self, db, log) -> dict[str, str]:
+        settings = await get_agent_settings(db)
+        catalogue = await build_menu_text(db)
+        greeting = (
+            "Assalam-o-Alaikum! Main Mitchell's Fruit Farms se baat kar "
+            "raha hoon. Kya main aapka thoda waqt le sakta hoon?"
+        )
+        return {
+            "customer_type": "existing" if log.order_booked else "new",
+            "customer_phone": log.caller_phone,
+            "customer_city": "",
+            "shop_name": log.customer_name_extracted or "",
+            "owner_name": log.customer_name or log.customer_name_extracted or "",
+            "last_order": log.order_items if log.order_booked else "",
+            "product_catalogue": catalogue,
+            "company_info": settings.restaurant_info or "",
+            "language_preference": "Urdu",
+            "greeting": greeting,
+            "begin_message": greeting,
+        }
+
+    async def _dial_call_log_recall(self, db, log) -> None:
+        dynamic_vars = await self._build_call_log_recall_variables(db, log)
+        agent_id = None
+        if log.direction == "outbound":
+            agent_id = (
+                os.getenv("RETELL_OUTBOUND_AGENT_ID", "")
+                or os.getenv("RETELL_AGENT_ID", "")
+                or None
+            )
+        await retell_service.create_phone_call(
+            to_number=log.caller_phone,
+            override_agent_id=agent_id,
+            dynamic_variables=dynamic_vars,
+            metadata={
+                "original_call_id": log.call_id,
+                "is_callback": "true",
+            },
+        )
+
     async def _recall_scheduler_loop(self):
         """
-        Background loop: every 60 s check for contacts whose recall_at has
-        passed and auto-dial them via their campaign agent.
+        Background loop: check for contacts and call logs whose recall_at has
+        passed and auto-dial them.
         """
         _logger.info("Recall scheduler started")
+        poll_secs = 15
         while True:
             try:
-                await asyncio.sleep(60)
                 async with AsyncSessionLocal() as db:
                     due = await repo.get_contacts_due_for_recall(db)
+                    dialed_phones: set[str] = set()
                     for contact in due:
                         campaign = contact.campaign
                         if not campaign:
+                            _logger.warning(
+                                "Skipping recall for contact=%s: no campaign",
+                                contact.id,
+                            )
                             continue
-                        if contact.status in ("calling",):
+                        if contact.status == "calling":
                             continue
                         try:
-                            _logger.warning(f"DEBUG_SCHEDULER: Picked up OutboundContact {contact.id} for dialing.")
-                            # Clear recall_at before dialling so we don't loop
-                            await repo.update_contact(db, contact, recall_at=None)
-                            await self._dial_contact(db, campaign, contact)
                             _logger.info(
-                                "Auto-recall dialled contact=%s phone=%s",
+                                "Auto-recall dialling contact=%s phone=%s",
                                 contact.id,
                                 contact.phone_number,
+                            )
+                            await self._dial_contact(db, campaign, contact)
+                            await repo.update_contact(
+                                db, contact, recall_at=None
+                            )
+                            dialed_phones.add(
+                                normalize_phone_number(contact.phone_number)
+                            )
+                            await repo.clear_call_log_recalls_for_phone(
+                                db, contact.phone_number
                             )
                         except Exception as exc:
                             _logger.error(
@@ -838,63 +927,53 @@ class OutboundCallingService:
                                 exc,
                             )
 
-                    # Check CallLog for manually set callbacks via frontend
                     from src.utils.db import CallLog
                     from sqlalchemy import select
-                    from datetime import timezone
+
                     now_utc = datetime.now(timezone.utc)
                     log_res = await db.execute(
                         select(CallLog).where(
                             CallLog.recall_at <= now_utc,
-                            CallLog.call_status.notin_(["ongoing", "calling", "ringing"]),
-                            CallLog.direction == "inbound"
+                            CallLog.recall_at.isnot(None),
+                            CallLog.call_status.notin_(
+                                ["ongoing", "calling", "ringing"]
+                            ),
                         )
                     )
                     due_logs = log_res.scalars().all()
                     for log in due_logs:
                         if not log.caller_phone:
                             continue
-                        try:
-                            _logger.warning(f"DEBUG_SCHEDULER: Picked up CallLog {log.call_id} (Direction: {log.direction}) for dialing.")
+                        phone_key = normalize_phone_number(log.caller_phone)
+                        if phone_key in dialed_phones:
                             log.recall_at = None
                             await db.commit()
-                            
-                            from src.services import retell_service
-                            from src.utils.db_functions import get_agent_settings, build_menu_text
-                            settings = await get_agent_settings(db)
-                            catalogue = await build_menu_text(db)
-                            
-                            dynamic_vars = {
-                                "customer_type": "existing" if log.order_booked else "new",
-                                "customer_phone": log.caller_phone,
-                                "customer_city": "",
-                                "shop_name": log.customer_name_extracted or "",
-                                "owner_name": log.customer_name or log.customer_name_extracted or "",
-                                "last_order": log.order_items if log.order_booked else "",
-                                "product_catalogue": catalogue,
-                                "company_info": settings.restaurant_info or "",
-                                "language_preference": "Urdu"
-                            }
-                            
-                            dynamic_vars["greeting"] = "Assalam-o-Alaikum! Main Mitchell's Fruit Farms se baat kar raha hoon. Kya main aapka thoda waqt le sakta hoon?"
-                            dynamic_vars["begin_message"] = dynamic_vars["greeting"]
-                            
-                            await retell_service.create_phone_call(
-                                to_number=log.caller_phone,
-                                dynamic_variables=dynamic_vars,
-                                metadata={
-                                    "original_call_id": log.call_id,
-                                    "is_callback": "true"
-                                }
+                            continue
+                        try:
+                            _logger.info(
+                                "Auto-recall dialling call_log=%s phone=%s "
+                                "direction=%s",
+                                log.call_id,
+                                log.caller_phone,
+                                log.direction,
                             )
-                            _logger.info("Auto-recall dialled CallLog call=%s phone=%s", log.call_id, log.caller_phone)
+                            await self._dial_call_log_recall(db, log)
+                            log.recall_at = None
+                            await db.commit()
                         except Exception as exc:
-                            _logger.error("Auto-recall dial failed for CallLog call=%s: %s", log.call_id, exc)
+                            await db.rollback()
+                            _logger.error(
+                                "Auto-recall dial failed for CallLog "
+                                "call=%s: %s",
+                                log.call_id,
+                                exc,
+                            )
             except asyncio.CancelledError:
                 _logger.info("Recall scheduler cancelled")
                 break
             except Exception as exc:
                 _logger.error("Recall scheduler error: %s", exc)
+            await asyncio.sleep(poll_secs)
 
 
 outbound_service = OutboundCallingService()

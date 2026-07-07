@@ -89,19 +89,35 @@ export function formatDuration(ms) {
 }
 
 export const STATUS_COLORS = {
+  registered: { bg: C.blueBg, color: C.blue },
+  ongoing: { bg: C.goldBg, color: C.gold },
+  ended: { bg: C.blueBg, color: C.blue },
+  completed: { bg: C.blueBg, color: C.blue },
+  failed: { bg: C.blueBg, color: C.blue },
+  pending: { bg: C.blueBg, color: C.blue },
+  calling: { bg: C.goldBg, color: C.gold },
   draft: { bg: C.blueBg, color: C.blue },
   active: { bg: C.blueBg, color: C.blue },
   paused: { bg: C.goldBg, color: C.gold },
-  completed: { bg: C.blueBg, color: C.blue },
-  pending: { bg: C.blueBg, color: C.blue },
-  calling: { bg: C.goldBg, color: C.gold },
-  failed: { bg: C.blueBg, color: C.blue },
-  ended: { bg: C.blueBg, color: C.blue },
-  ongoing: { bg: C.goldBg, color: C.gold },
+};
+
+const STATUS_LABELS = {
+  registered: "Dialing",
+  ongoing: "In Progress",
+  ended: "Completed",
+  completed: "Completed",
+  failed: "Failed",
+  pending: "Pending",
+  calling: "Calling",
+  draft: "Draft",
+  active: "Active",
+  paused: "Paused",
 };
 
 export function StatusBadge({ status }) {
-  const s = STATUS_COLORS[status] || { bg: C.blueBg, color: C.blue };
+  const key = (status || "").toLowerCase();
+  const s = STATUS_COLORS[key] || { bg: C.blueBg, color: C.blue };
+  const label = STATUS_LABELS[key] || status;
   return (
     <span
       style={{
@@ -111,10 +127,9 @@ export function StatusBadge({ status }) {
         borderRadius: 100,
         background: s.bg,
         color: s.color,
-        textTransform: "capitalize",
       }}
     >
-      {status}
+      {label}
     </span>
   );
 }

@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.utils.db import OutboundCampaign, OutboundContact, OutboundCall, Order
+from src.api.outbound.utils import normalize_phone_number
+from src.utils.db_functions import LIVE_CALL_STATUSES
 
 
 async def get_last_order_by_phone(
@@ -318,18 +320,28 @@ async def update_outbound_call(
             res = await db.execute(select(CallLog).where(CallLog.call_id == call.retell_call_id))
             log = res.scalar_one_or_none()
             if log:
-                if "call_status" in kwargs:
-                    log.call_status = kwargs["call_status"]
+                if "call_status" in kwargs and kwargs["call_status"]:
+                    status = str(kwargs["call_status"]).lower()
+                    if status in ("error", "failed", "dial_failed"):
+                        log.call_status = "failed"
+                    elif status in LIVE_CALL_STATUSES:
+                        log.call_status = "ongoing"
+                    else:
+                        log.call_status = "ended"
                 if "duration" in kwargs:
                     log.duration_ms = kwargs["duration"]
-                if "recording_url" in kwargs:
+                if "recording_url" in kwargs and kwargs["recording_url"]:
                     log.recording_url = kwargs["recording_url"]
-                if "transcript" in kwargs:
+                if "transcript" in kwargs and kwargs["transcript"]:
                     log.transcript = kwargs["transcript"]
                 if "summary" in kwargs:
                     log.call_summary = kwargs["summary"]
                 if "start_timestamp" in kwargs:
                     log.start_timestamp = kwargs["start_timestamp"]
+                if kwargs.get("ended_at") is not None:
+                    ended = kwargs["ended_at"]
+                    if hasattr(ended, "timestamp"):
+                        log.end_timestamp = int(ended.timestamp() * 1000)
                 await db.commit()
         except Exception:
             pass
@@ -396,12 +408,30 @@ async def get_contacts_due_for_recall(
         select(OutboundContact)
         .where(
             OutboundContact.recall_at <= now,
-            OutboundContact.status.notin_(["calling", "pending"]),
+            OutboundContact.status != "calling",
         )
         .options(selectinload(OutboundContact.campaign))
         .order_by(OutboundContact.recall_at.asc())
     )
     return list(result.scalars().all())
+
+
+async def clear_call_log_recalls_for_phone(
+    db: AsyncSession,
+    phone_number: str,
+) -> None:
+    from src.utils.db import CallLog
+
+    normalized = normalize_phone_number(phone_number)
+    result = await db.execute(
+        select(CallLog).where(
+            CallLog.caller_phone == normalized,
+            CallLog.recall_at.isnot(None),
+        )
+    )
+    for log in result.scalars().all():
+        log.recall_at = None
+    await db.commit()
 
 
 async def get_latest_call_for_contact(

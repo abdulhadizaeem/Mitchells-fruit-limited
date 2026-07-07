@@ -194,6 +194,8 @@ async def update_call_log(db: AsyncSession, call_id: str, **kwargs) -> None:
     Updates a call log's columns dynamically.
     **kwargs: Accepts keyword arguments matching table column names (e.g. transcript="hello", duration_ms=200).
     """
+    if not call_id:
+        return
     if kwargs.get("order_booked") and kwargs.get("call_successful") is None:
         kwargs["call_successful"] = True
 
@@ -201,6 +203,61 @@ async def update_call_log(db: AsyncSession, call_id: str, **kwargs) -> None:
         update(CallLog).where(CallLog.call_id == call_id).values(**kwargs)
     )
     await db.commit()
+
+
+LIVE_CALL_STATUSES = frozenset({
+    "ongoing", "registered", "ringing", "started", "calling", "in_progress",
+})
+
+
+async def reconcile_stale_live_call_logs(
+    db: AsyncSession,
+    max_rows: int = 10,
+) -> None:
+    from src.services import retell_service
+
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    result = await db.execute(
+        select(CallLog)
+        .where(
+            CallLog.call_status.in_(tuple(LIVE_CALL_STATUSES)),
+            CallLog.created_at < cutoff,
+        )
+        .order_by(CallLog.created_at.asc())
+        .limit(max_rows)
+    )
+    for log in result.scalars().all():
+        try:
+            data = await retell_service.get_call(log.call_id)
+        except Exception:
+            continue
+        end_ts = data.get("end_timestamp")
+        retell_status = (data.get("call_status") or "").lower()
+        terminal = retell_status in (
+            "ended", "completed", "done", "error", "failed",
+            "not_connected", "voicemail", "dial_failed",
+            "dial_no_answer", "dial_busy",
+        )
+        if not end_ts and not terminal:
+            continue
+        updates: dict = {
+            "call_status": (
+                "failed"
+                if retell_status in ("error", "failed", "dial_failed")
+                else "ended"
+            ),
+        }
+        if end_ts:
+            updates["end_timestamp"] = end_ts
+        if data.get("duration_ms") is not None:
+            updates["duration_ms"] = data.get("duration_ms")
+        transcript = retell_service.extract_transcript_from_call(data)
+        if transcript:
+            updates["transcript"] = transcript
+        analysis = data.get("call_analysis") or {}
+        if analysis.get("call_summary"):
+            updates["call_summary"] = analysis.get("call_summary")
+        await update_call_log(db, log.call_id, **updates)
 
 
 async def get_call_log_by_call_id(db: AsyncSession, call_id: str) -> CallLog | None:

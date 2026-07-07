@@ -22,6 +22,8 @@ from src.utils.dependencies import get_current_user
 from src.utils.db_functions import (
     list_call_logs,
     get_call_log_by_call_id,
+    reconcile_stale_live_call_logs,
+    LIVE_CALL_STATUSES,
     get_combined_stats,
     get_caller_by_phone,
     upsert_caller,
@@ -329,6 +331,7 @@ async def get_calls(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    await reconcile_stale_live_call_logs(db)
     logs = await list_call_logs(db, skip, limit, call_status, order_booked)
     return await _enrich_call_logs_with_caller_names(db, logs)
 
@@ -741,12 +744,31 @@ async def inbound_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     call_inbound = event.get("call_inbound", {})
     from_number = call_inbound.get("from_number", "")
+    inbound_call_id = (
+        call_inbound.get("call_id")
+        or event.get("call_id")
+        or request.headers.get("x-retell-call-id")
+        or request.headers.get("X-Retell-Call-Id")
+        or ""
+    )
 
     existing_caller = await get_caller_by_phone(db, from_number)
     dynamic_vars = retell_service.build_caller_dynamic_variables(existing_caller, from_number)
 
     await upsert_caller(db, from_number, existing_caller.customer_name if existing_caller else None)
     await update_caller_last_called(db, from_number)
+
+    if inbound_call_id and from_number:
+        await _ensure_call_log(
+            db,
+            inbound_call_id,
+            caller_phone=from_number,
+            customer_name=(
+                existing_caller.customer_name if existing_caller else None
+            ),
+            direction="inbound",
+            call_status="ongoing",
+        )
 
     settings = await get_agent_settings(db)
     try:
@@ -839,6 +861,33 @@ async def _resolve_retell_call_id(
     return call_id, call_obj
 
 
+def _extract_webhook_call_id(
+    request: Request,
+    event: dict,
+    call_data: dict,
+) -> str:
+    return (
+        call_data.get("call_id")
+        or event.get("call_id")
+        or request.headers.get("x-retell-call-id")
+        or request.headers.get("X-Retell-Call-Id")
+        or ""
+    )
+
+
+def _normalize_call_log_status(call_data: dict) -> str:
+    status = (call_data.get("call_status") or "").lower()
+    if status in ("error", "failed", "dial_failed"):
+        return "failed"
+    if call_data.get("end_timestamp"):
+        return "ended"
+    if status in LIVE_CALL_STATUSES:
+        return "ongoing"
+    if status:
+        return "ended"
+    return "ended"
+
+
 async def _ensure_call_log(
     db: AsyncSession,
     call_id: str,
@@ -846,9 +895,11 @@ async def _ensure_call_log(
     caller_phone: str,
     customer_name: str | None = None,
     direction: str = "inbound",
-    call_status: str = "ongoing",
+    call_status: str | None = "ongoing",
     **extra,
 ) -> None:
+    if not call_id:
+        return
     existing = await get_call_log_by_call_id(db, call_id)
     if not existing:
         await create_call_log(
@@ -857,13 +908,40 @@ async def _ensure_call_log(
             caller_phone=caller_phone or "Unknown",
             customer_name=customer_name,
             direction=direction,
-            call_status=call_status,
+            call_status=call_status or "ongoing",
         )
     updates = dict(extra)
     if call_status:
-        updates.setdefault("call_status", call_status)
+        if not existing or existing.call_status in LIVE_CALL_STATUSES:
+            updates.setdefault("call_status", call_status)
     if updates:
         await update_call_log(db, call_id, **updates)
+
+
+async def _ensure_call_log_for_ended_event(
+    db: AsyncSession,
+    call_id: str,
+    call_data: dict,
+) -> None:
+    if not call_id:
+        return
+    existing = await get_call_log_by_call_id(db, call_id)
+    if existing:
+        return
+    phone, direction = _phone_from_call_data(call_data)
+    if direction == "inbound":
+        phone = phone or call_data.get("from_number", "")
+    else:
+        phone = phone or call_data.get("to_number", "")
+    caller = await get_caller_by_phone(db, phone) if phone else None
+    await create_call_log(
+        db,
+        call_id=call_id,
+        caller_phone=phone or "Unknown",
+        customer_name=caller.customer_name if caller else None,
+        direction=direction,
+        call_status=_normalize_call_log_status(call_data),
+    )
 
 
 async def _sync_call_log_on_started(
@@ -969,16 +1047,47 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     event_type = event.get("event")
     call_data = event.get("call", {})
-    call_id = call_data.get("call_id", "")
+    call_id = _extract_webhook_call_id(request, event, call_data)
 
     if _is_outbound_call(call_data):
         from src.api.outbound.service import outbound_service
-        await outbound_service.process_webhook(db, event)
+        try:
+            await outbound_service.process_webhook(db, event)
+        except Exception as exc:
+            import logging
+            logging.getLogger("retell_webhook").error(
+                "Outbound webhook processing failed for call=%s: %s",
+                call_id,
+                exc,
+            )
 
-    if event_type == "call_started":
+    if not call_id:
+        import logging
+        logging.getLogger("retell_webhook").warning(
+            "Webhook event=%s missing call_id",
+            event_type,
+        )
+
+    if event_type == "call_started" and call_id:
         await _sync_call_log_on_started(db, call_data)
 
-    if event_type == "call_ended":
+    if event_type in ("transcript_ready", "transcript_updated"):
+        transcript_text = retell_service.extract_transcript_from_call(call_data)
+        if transcript_text and call_id:
+            existing = await get_call_log_by_call_id(db, call_id)
+            if not existing:
+                phone, direction = _phone_from_call_data(call_data)
+                await create_call_log(
+                    db,
+                    call_id=call_id,
+                    caller_phone=phone or "Unknown",
+                    customer_name=None,
+                    direction=direction,
+                    call_status="ongoing",
+                )
+            await update_call_log(db, call_id, transcript=transcript_text)
+
+    if event_type == "call_ended" and call_id:
         direction = "outbound" if _is_outbound_call(call_data) else call_data.get("direction", "inbound")
         from_number = call_data.get("to_number", "") if direction == "outbound" else call_data.get("from_number", "")
 
@@ -990,35 +1099,27 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         reservation_date = (collected.get("reservation_date") or "").strip() or None
         party_size = (collected.get("party_size") or "").strip() or None
 
+        await _ensure_call_log_for_ended_event(db, call_id, call_data)
         existing_log = await get_call_log_by_call_id(db, call_id)
-        if not existing_log:
-            caller = await get_caller_by_phone(db, from_number)
-            existing_log = await create_call_log(
-                db,
-                call_id=call_id,
-                caller_phone=from_number,
-                customer_name=caller.customer_name if caller else None,
-                direction=direction,
-                call_status="ended",
-            )
 
-        transcript_text = call_data.get("transcript") or ""
+        transcript_text = retell_service.extract_transcript_from_call(call_data)
         # The summary might be nested in the top-level payload or inside call_analysis if present
         call_analysis = call_data.get("call_analysis", {})
         summary_text = call_analysis.get("call_summary", "")
         
-        combined_text = transcript_text + " " + summary_text
+        combined_text = (transcript_text or "") + " " + summary_text
         recall_at_val = _extract_callback_time_from_text(combined_text)
 
         update_data = {
-            "call_status": "ended",
+            "call_status": _normalize_call_log_status(call_data),
             "duration_ms": call_data.get("duration_ms"),
             "end_timestamp": call_data.get("end_timestamp"),
             "start_timestamp": call_data.get("start_timestamp"),
-            "transcript": transcript_text if transcript_text else None,
             "recording_url": call_data.get("recording_url"),
             "raw_payload": event,
         }
+        if transcript_text:
+            update_data["transcript"] = transcript_text
         if recall_at_val:
             update_data["recall_at"] = recall_at_val
         if order_items:
@@ -1029,7 +1130,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
             update_data["special_notes"] = special_notes
         if customer_name_extracted:
             update_data["customer_name_extracted"] = customer_name_extracted
-            if not existing_log.customer_name:
+            if not existing_log or not existing_log.customer_name:
                 update_data["customer_name"] = customer_name_extracted
         if reservation_date:
             update_data["reservation_date"] = reservation_date
@@ -1093,7 +1194,8 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 _auto_logger.warning("Auto-order: no menu items matched for call %s - saving draft", call_id)
                 await update_call_log(db, call_id, order_booked=True)
 
-    elif event_type == "call_analyzed":
+    elif event_type == "call_analyzed" and call_id:
+        await _ensure_call_log_for_ended_event(db, call_id, call_data)
         analysis = call_data.get("call_analysis")
         if not isinstance(analysis, dict):
             analysis = {}
@@ -1272,6 +1374,22 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if feedback_rating is not None:
             feedback_updates["feedback_rating"] = feedback_rating
 
+        analyzed_transcript = retell_service.extract_transcript_from_call(call_data)
+        transcript_update = (
+            {"transcript": analyzed_transcript} if analyzed_transcript else {}
+        )
+        end_update = {
+            "call_status": _normalize_call_log_status(call_data),
+        }
+        if call_data.get("end_timestamp") is not None:
+            end_update["end_timestamp"] = call_data.get("end_timestamp")
+        if call_data.get("duration_ms") is not None:
+            end_update["duration_ms"] = call_data.get("duration_ms")
+        if call_data.get("recording_url"):
+            end_update["recording_url"] = call_data.get("recording_url")
+        if call_data.get("start_timestamp") is not None:
+            end_update["start_timestamp"] = call_data.get("start_timestamp")
+
         if is_order_booked and not recent_order:
             if "export" in call_summary_text:
                 inferred_order_type = "B2B Export Inquiry"
@@ -1294,6 +1412,8 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 order_type=inferred_order_type,
                 **name_updates,
                 **feedback_updates,
+                **transcript_update,
+                **end_update,
             )
         else:
             await update_call_log(
@@ -1306,6 +1426,8 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
                 call_reason=call_reason,
                 **name_updates,
                 **feedback_updates,
+                **transcript_update,
+                **end_update,
             )
 
         # ── Auto-schedule callback from call summary (most reliable place) ──────
