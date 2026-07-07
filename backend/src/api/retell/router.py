@@ -662,6 +662,10 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
         )
 
     call_id = request.headers.get("x-retell-call-id") or raw.get("call_id")
+    if not call_id:
+        call_id, _ = await _resolve_retell_call_id(
+            request, raw, db, body.customer_phone
+        )
 
     order = await create_order(
         db,
@@ -675,6 +679,22 @@ async def order_confirm(request: Request, db: AsyncSession = Depends(get_db)):
         call_id=call_id,
     )
     await upsert_caller(db, body.customer_phone, body.customer_name)
+
+    if call_id:
+        call_obj = raw.get("call") if isinstance(raw.get("call"), dict) else {}
+        direction = call_obj.get("direction") or (
+            "outbound" if _is_outbound_call(call_obj) else "inbound"
+        )
+        await _ensure_call_log(
+            db,
+            call_id,
+            caller_phone=body.customer_phone,
+            customer_name=body.customer_name,
+            direction=direction,
+            call_status="ongoing",
+            order_booked=True,
+            call_successful=True,
+        )
 
     import logging
     from src.services import clover_service
@@ -774,6 +794,111 @@ def _is_outbound_call(call_data: dict) -> bool:
     return bool(metadata.get("campaign_id") or metadata.get("contact_id"))
 
 
+def _phone_from_call_data(call_data: dict) -> tuple[str, str]:
+    direction = "outbound" if _is_outbound_call(call_data) else call_data.get("direction", "inbound")
+    if direction == "outbound":
+        phone = call_data.get("to_number", "") or call_data.get("from_number", "")
+    else:
+        phone = call_data.get("from_number", "") or call_data.get("to_number", "")
+    return phone, direction
+
+
+async def _resolve_retell_call_id(
+    request: Request,
+    data: dict,
+    db: AsyncSession,
+    caller_phone: str | None = None,
+) -> tuple[str | None, dict]:
+    call_obj = data.get("call") if isinstance(data.get("call"), dict) else {}
+    call_id = (
+        request.headers.get("x-retell-call-id")
+        or request.headers.get("X-Retell-Call-Id")
+        or data.get("call_id")
+        or call_obj.get("call_id")
+    )
+    phone = (caller_phone or "").strip()
+    if not call_id and phone:
+        from src.utils.db import OutboundCall
+        from src.utils.db_functions import normalize_phone_number
+
+        candidates = {phone}
+        norm = normalize_phone_number(phone)
+        if norm:
+            candidates.add(norm)
+        for candidate in candidates:
+            result = await db.execute(
+                select(OutboundCall)
+                .where(OutboundCall.phone_number == candidate)
+                .order_by(OutboundCall.created_at.desc())
+                .limit(1)
+            )
+            ob = result.scalar_one_or_none()
+            if ob and ob.retell_call_id:
+                call_id = ob.retell_call_id
+                break
+    return call_id, call_obj
+
+
+async def _ensure_call_log(
+    db: AsyncSession,
+    call_id: str,
+    *,
+    caller_phone: str,
+    customer_name: str | None = None,
+    direction: str = "inbound",
+    call_status: str = "ongoing",
+    **extra,
+) -> None:
+    existing = await get_call_log_by_call_id(db, call_id)
+    if not existing:
+        await create_call_log(
+            db,
+            call_id=call_id,
+            caller_phone=caller_phone or "Unknown",
+            customer_name=customer_name,
+            direction=direction,
+            call_status=call_status,
+        )
+    updates = dict(extra)
+    if call_status:
+        updates.setdefault("call_status", call_status)
+    if updates:
+        await update_call_log(db, call_id, **updates)
+
+
+async def _sync_call_log_on_started(
+    db: AsyncSession,
+    call_data: dict,
+) -> None:
+    call_id = call_data.get("call_id", "")
+    if not call_id:
+        return
+    phone, direction = _phone_from_call_data(call_data)
+    customer_name = None
+    if direction == "outbound":
+        metadata = call_data.get("metadata") or {}
+        contact_id = metadata.get("contact_id")
+        if contact_id:
+            from src.api.outbound import repository as outbound_repo
+            contact = await outbound_repo.get_contact(db, contact_id)
+            if contact:
+                customer_name = contact.name
+    if not customer_name and phone:
+        caller = await get_caller_by_phone(db, phone)
+        customer_name = caller.customer_name if caller else None
+    await _ensure_call_log(
+        db,
+        call_id,
+        caller_phone=phone,
+        customer_name=customer_name,
+        direction=direction,
+        call_status="ongoing",
+        start_timestamp=call_data.get("start_timestamp"),
+    )
+    if phone:
+        await upsert_caller(db, phone, customer_name)
+
+
 async def _enrich_call_logs_with_caller_names(
     db: AsyncSession,
     logs: list,
@@ -850,8 +975,11 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         from src.api.outbound.service import outbound_service
         await outbound_service.process_webhook(db, event)
 
+    if event_type == "call_started":
+        await _sync_call_log_on_started(db, call_data)
+
     if event_type == "call_ended":
-        direction = call_data.get("direction", "inbound")
+        direction = "outbound" if _is_outbound_call(call_data) else call_data.get("direction", "inbound")
         from_number = call_data.get("to_number", "") if direction == "outbound" else call_data.get("from_number", "")
 
         collected = call_data.get("collected_dynamic_variables") or {}
@@ -1016,7 +1144,7 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
             else:
                 is_success = False
 
-        direction = call_data.get("direction", "inbound")
+        direction = "outbound" if _is_outbound_call(call_data) else call_data.get("direction", "inbound")
         from_number = call_data.get("to_number", "") if direction == "outbound" else call_data.get("from_number", "")
         if not from_number and existing_log:
             from_number = existing_log.caller_phone
@@ -1373,7 +1501,9 @@ async def log_trade_inquiry(request: Request, db: AsyncSession = Depends(get_db)
 
     # Continue with your existing code
     call_obj = data.get("call", {})
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or call_obj.get("call_id")
+    call_id, call_obj = await _resolve_retell_call_id(
+        request, data, db, args.get("caller_phone", "")
+    )
     existing_log = await get_call_log_by_call_id(db, call_id) if call_id else None
     print(f"[DEBUG] call_id resolved to: {call_id!r}")
     print(f"[DEBUG] call_obj: {call_obj}")
@@ -1650,6 +1780,12 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
 
     args = data.get("args", data)
 
+    caller_phone = (args.get("caller_phone") or "").strip()
+    caller_name = (args.get("caller_name") or "").strip()
+    call_id, call_obj = await _resolve_retell_call_id(
+        request, data, db, caller_phone
+    )
+
     callback = CallbackRequest(
         id=str(uuid.uuid4()),
         caller_name=args.get("caller_name", ""),
@@ -1661,22 +1797,20 @@ async def log_callback_request(request: Request, db: AsyncSession = Depends(get_
     db.add(callback)
     await db.commit()
 
-    call_id = request.headers.get("x-retell-call-id") or data.get("call_id") or data.get("call", {}).get("call_id")
     if call_id:
-        existing_log = await get_call_log_by_call_id(db, call_id)
-        caller_phone = args.get("caller_phone", "")
-        caller_name = args.get("caller_name", "")
         if caller_phone:
             await upsert_caller(db, caller_phone, caller_name or None)
-        if not existing_log:
-            existing_log = await create_call_log(
-                db,
-                call_id=call_id,
-                caller_phone=caller_phone or "Unknown",
-                customer_name=caller_name or None,
-                direction=data.get("call", {}).get("direction", "inbound"),
-                call_status="ongoing",
-            )
+        direction = call_obj.get("direction") or (
+            "outbound" if _is_outbound_call(call_obj) else "inbound"
+        )
+        await _ensure_call_log(
+            db,
+            call_id,
+            caller_phone=caller_phone or "Unknown",
+            customer_name=caller_name or None,
+            direction=direction,
+            call_status="ongoing",
+        )
 
         reason = args.get("reason", "")
         notes = args.get("notes", "")
