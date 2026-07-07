@@ -317,8 +317,30 @@ async def update_outbound_call(
     if call.retell_call_id:
         try:
             from src.utils.db import CallLog
-            res = await db.execute(select(CallLog).where(CallLog.call_id == call.retell_call_id))
+            from src.utils.db_functions import create_call_log
+
+            res = await db.execute(
+                select(CallLog).where(CallLog.call_id == call.retell_call_id)
+            )
             log = res.scalar_one_or_none()
+            if not log:
+                contact_name = None
+                if call.contact:
+                    contact_name = call.contact.name
+                await create_call_log(
+                    db,
+                    call_id=call.retell_call_id,
+                    caller_phone=call.phone_number,
+                    customer_name=contact_name,
+                    direction="outbound",
+                    call_status="ended",
+                )
+                res = await db.execute(
+                    select(CallLog).where(
+                        CallLog.call_id == call.retell_call_id
+                    )
+                )
+                log = res.scalar_one_or_none()
             if log:
                 if "call_status" in kwargs and kwargs["call_status"]:
                     status = str(kwargs["call_status"]).lower()
@@ -343,8 +365,13 @@ async def update_outbound_call(
                     if hasattr(ended, "timestamp"):
                         log.end_timestamp = int(ended.timestamp() * 1000)
                 await db.commit()
-        except Exception:
-            pass
+        except Exception as exc:
+            import logging
+            logging.getLogger("outbound_calling").warning(
+                "Failed to mirror outbound call %s to call_logs: %s",
+                call.retell_call_id,
+                exc,
+            )
 
     return call
 

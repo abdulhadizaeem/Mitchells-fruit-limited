@@ -534,7 +534,11 @@ class OutboundCallingService:
             "recording_url": retell_data.get("recording_url"),
             "start_timestamp": retell_data.get("start_timestamp"),
         }
-        transcript = retell_service.extract_transcript_from_call(retell_data)
+        transcript = await retell_service.resolve_call_transcript(
+            retell_data,
+            call.retell_call_id,
+            fetch_if_missing=True,
+        )
         if transcript:
             updates["transcript"] = transcript
         analysis = retell_data.get("call_analysis") or {}
@@ -809,14 +813,19 @@ class OutboundCallingService:
                             call.contact_id,
                         )
 
-        if event_type in (
+        fetch_transcript = event_type in (
             "call_ended",
             "call_analyzed",
             "post_call_analysis",
             "transcript_ready",
             "transcript_updated",
-        ):
-            transcript = retell_service.extract_transcript_from_call(call_data)
+        )
+        if fetch_transcript:
+            transcript = await retell_service.resolve_call_transcript(
+                call_data,
+                retell_call_id,
+                fetch_if_missing=True,
+            )
             if transcript:
                 updates["transcript"] = transcript
 

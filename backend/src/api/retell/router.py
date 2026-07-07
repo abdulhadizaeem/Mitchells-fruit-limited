@@ -23,6 +23,7 @@ from src.utils.db_functions import (
     list_call_logs,
     get_call_log_by_call_id,
     reconcile_stale_live_call_logs,
+    backfill_missing_transcripts,
     LIVE_CALL_STATUSES,
     get_combined_stats,
     get_caller_by_phone,
@@ -333,6 +334,7 @@ async def get_calls(
 ):
     await reconcile_stale_live_call_logs(db)
     logs = await list_call_logs(db, skip, limit, call_status, order_booked)
+    await backfill_missing_transcripts(db, logs)
     return await _enrich_call_logs_with_caller_names(db, logs)
 
 
@@ -345,6 +347,7 @@ async def get_call(
     log = await get_call_log_by_call_id(db, call_id)
     if not log:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Call log not found")
+    await backfill_missing_transcripts(db, [log], max_fetch=1)
     enriched = await _enrich_call_logs_with_caller_names(db, [log])
     return enriched[0]
 
@@ -1072,7 +1075,11 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         await _sync_call_log_on_started(db, call_data)
 
     if event_type in ("transcript_ready", "transcript_updated"):
-        transcript_text = retell_service.extract_transcript_from_call(call_data)
+        transcript_text = await retell_service.resolve_call_transcript(
+            call_data,
+            call_id,
+            fetch_if_missing=True,
+        )
         if transcript_text and call_id:
             existing = await get_call_log_by_call_id(db, call_id)
             if not existing:
@@ -1102,7 +1109,11 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         await _ensure_call_log_for_ended_event(db, call_id, call_data)
         existing_log = await get_call_log_by_call_id(db, call_id)
 
-        transcript_text = retell_service.extract_transcript_from_call(call_data)
+        transcript_text = await retell_service.resolve_call_transcript(
+            call_data,
+            call_id,
+            fetch_if_missing=False,
+        )
         # The summary might be nested in the top-level payload or inside call_analysis if present
         call_analysis = call_data.get("call_analysis", {})
         summary_text = call_analysis.get("call_summary", "")
@@ -1116,8 +1127,13 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
             "end_timestamp": call_data.get("end_timestamp"),
             "start_timestamp": call_data.get("start_timestamp"),
             "recording_url": call_data.get("recording_url"),
-            "raw_payload": event,
         }
+        if not transcript_text:
+            transcript_text = await retell_service.resolve_call_transcript(
+                call_data,
+                call_id,
+                fetch_if_missing=True,
+            )
         if transcript_text:
             update_data["transcript"] = transcript_text
         if recall_at_val:
@@ -1374,7 +1390,11 @@ async def webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if feedback_rating is not None:
             feedback_updates["feedback_rating"] = feedback_rating
 
-        analyzed_transcript = retell_service.extract_transcript_from_call(call_data)
+        analyzed_transcript = await retell_service.resolve_call_transcript(
+            call_data,
+            call_id,
+            fetch_if_missing=True,
+        )
         transcript_update = (
             {"transcript": analyzed_transcript} if analyzed_transcript else {}
         )

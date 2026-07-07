@@ -252,12 +252,51 @@ async def reconcile_stale_live_call_logs(
         if data.get("duration_ms") is not None:
             updates["duration_ms"] = data.get("duration_ms")
         transcript = retell_service.extract_transcript_from_call(data)
+        if not transcript:
+            transcript = await retell_service.resolve_call_transcript(
+                data,
+                log.call_id,
+                fetch_if_missing=False,
+            )
         if transcript:
             updates["transcript"] = transcript
         analysis = data.get("call_analysis") or {}
         if analysis.get("call_summary"):
             updates["call_summary"] = analysis.get("call_summary")
         await update_call_log(db, log.call_id, **updates)
+
+
+async def backfill_missing_transcripts(
+    db: AsyncSession,
+    logs: list[CallLog],
+    max_fetch: int = 8,
+) -> None:
+    from src.services import retell_service
+    from src.utils.db import OutboundCall
+
+    fetched = 0
+    for log in logs:
+        if log.transcript or fetched >= max_fetch:
+            continue
+        text = None
+        ob_res = await db.execute(
+            select(OutboundCall).where(
+                OutboundCall.retell_call_id == log.call_id
+            )
+        )
+        outbound = ob_res.scalar_one_or_none()
+        if outbound and outbound.transcript:
+            text = outbound.transcript
+        else:
+            text = await retell_service.resolve_call_transcript(
+                {},
+                log.call_id,
+                fetch_if_missing=True,
+            )
+        if text:
+            await update_call_log(db, log.call_id, transcript=text)
+            log.transcript = text
+            fetched += 1
 
 
 async def get_call_log_by_call_id(db: AsyncSession, call_id: str) -> CallLog | None:

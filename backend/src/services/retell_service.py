@@ -308,7 +308,35 @@ def verify_webhook_signature(payload_bytes: bytes, signature_header: str, secret
     return hmac.compare_digest(expected, signature_header)
 
 
+def _utterance_content(entry: dict) -> str:
+    content = entry.get("content") or entry.get("text") or ""
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, dict):
+                parts.append(str(part.get("word") or part.get("text") or ""))
+            else:
+                parts.append(str(part))
+        content = " ".join(p for p in parts if p)
+    content = str(content).strip()
+    if content:
+        return content
+    words = entry.get("words")
+    if isinstance(words, list):
+        tokens = []
+        for word in words:
+            if isinstance(word, dict):
+                token = str(word.get("word") or "").strip()
+                if token:
+                    tokens.append(token)
+        if tokens:
+            return " ".join(tokens)
+    return ""
+
+
 def extract_transcript_from_call(call_data: dict) -> str | None:
+    if not call_data:
+        return None
     text = call_data.get("transcript")
     if isinstance(text, str) and text.strip():
         return text.strip()
@@ -330,16 +358,37 @@ def extract_transcript_from_call(call_data: dict) -> str | None:
             if not isinstance(entry, dict):
                 continue
             role = entry.get("role") or entry.get("speaker") or ""
-            content = entry.get("content") or entry.get("text") or ""
-            if isinstance(content, list):
-                content = " ".join(str(part) for part in content)
-            content = str(content).strip()
+            content = _utterance_content(entry)
             if not content:
                 continue
-            lines.append(f"{role}: {content}" if role else content)
+            if role in ("agent", "user", "transfer_target"):
+                label = "Agent" if role == "agent" else (
+                    "User" if role == "user" else role
+                )
+                lines.append(f"{label}: {content}")
+            else:
+                lines.append(content)
         if lines:
             return "\n".join(lines)
     return None
+
+
+async def resolve_call_transcript(
+    call_data: dict | None,
+    retell_call_id: str | None,
+    *,
+    fetch_if_missing: bool = False,
+) -> str | None:
+    text = extract_transcript_from_call(call_data or {})
+    if text:
+        return text
+    if not fetch_if_missing or not retell_call_id:
+        return None
+    try:
+        full = await get_call(retell_call_id)
+        return extract_transcript_from_call(full)
+    except Exception:
+        return None
 
 
 def build_caller_dynamic_variables(caller: Caller | None, from_number: str) -> dict:
