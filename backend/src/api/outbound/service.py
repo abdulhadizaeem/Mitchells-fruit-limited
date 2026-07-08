@@ -904,16 +904,16 @@ class OutboundCallingService:
                     due = await repo.get_contacts_due_for_recall(db)
                     dialed_phones: set[str] = set()
                     for contact in due:
-                        campaign = contact.campaign
-                        if not campaign:
-                            _logger.warning(
-                                "Skipping recall for contact=%s: no campaign",
-                                contact.id,
-                            )
-                            continue
                         if contact.status == "calling":
                             continue
                         try:
+                            campaign = contact.campaign
+                            if not campaign:
+                                _logger.warning(
+                                    "Skipping recall for contact=%s: no campaign",
+                                    contact.id,
+                                )
+                                continue
                             _logger.info(
                                 "Auto-recall dialling contact=%s phone=%s",
                                 contact.id,
