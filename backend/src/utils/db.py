@@ -377,6 +377,7 @@ class OutboundContact(Base):
     campaign: Mapped["OutboundCampaign"] = relationship(
         "OutboundCampaign",
         back_populates="contacts",
+        lazy="selectin",
     )
 
 
@@ -413,8 +414,12 @@ class OutboundCall(Base):
     campaign: Mapped["OutboundCampaign"] = relationship(
         "OutboundCampaign",
         back_populates="calls",
+        lazy="selectin",
     )
-    contact: Mapped["OutboundContact"] = relationship("OutboundContact")
+    contact: Mapped["OutboundContact"] = relationship(
+        "OutboundContact",
+        lazy="selectin",
+    )
 
 
 # 4. FASTAPI DEPENDENCY YIELDER
