@@ -981,7 +981,7 @@ class OutboundCallingService:
                 _logger.info("Recall scheduler cancelled")
                 break
             except Exception as exc:
-                _logger.error("Recall scheduler error: %s", exc)
+                _logger.error("Recall scheduler error: %s", exc, exc_info=True)
             await asyncio.sleep(poll_secs)
 
 
@@ -991,3 +991,4 @@ outbound_service = OutboundCallingService()
 async def start_recall_scheduler():
     """Create the background recall-scheduler task. Call once on app startup."""
     asyncio.create_task(outbound_service._recall_scheduler_loop())
+
