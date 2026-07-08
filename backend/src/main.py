@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     # 1. Run DDL migrations (create tables + alter columns)
     await init_db()
     # 2. Start the background recall/auto-dial scheduler
-    start_recall_scheduler()
+    await start_recall_scheduler()
     yield
 
 

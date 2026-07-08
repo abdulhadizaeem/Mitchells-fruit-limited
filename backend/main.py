@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
     sync_task = asyncio.create_task(_clover_menu_sync_loop())
 
     # 3. Launch the recall/callback auto-dialer scheduler
-    start_recall_scheduler()
+    await start_recall_scheduler()
     
     yield  # Server runs and handles requests here...
     
