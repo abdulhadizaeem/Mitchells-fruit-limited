@@ -9,7 +9,6 @@ import Layout from "./layout";
 import Overview from "./pages/user/Overview";
 import CallsOrders from "./pages/user/CallOrder";
 import SignIn from "./pages/Login";
-import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Menu from "./pages/user/Menu";
@@ -42,10 +41,6 @@ const router = createBrowserRouter([
       {
         path: "/signin",
         element: <SignIn />
-      },
-      {
-        path: "/register",
-        element: <Register />
       },
       {
         path: "/forgot-password",

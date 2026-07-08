@@ -1,7 +1,4 @@
 # DATABASE CONFIGURATION & SCHEMAS (SQLAlchemy ORM Models)
-# This file sets up our database connection engine and defines the tables
-# (schemas) using SQLAlchemy's modern ORM (Object-Relational Mapping) features.
-# It also implements automatic schema initialization and DDL migrations.
 
 import os
 import uuid
@@ -12,28 +9,22 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship
 from sqlalchemy import String, Boolean, DateTime, Text, Integer, BigInteger, JSON, Date, Float, ForeignKey
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # 1. DATABASE CONNECTION SETUP
-# Retrieve the database connection URL from the environment config.
-# Expected format: postgresql+asyncpg://<username>:<password>@<host>:<port>/<dbname>
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Create the Asynchronous Engine:
-# - 'echo=False' prevents logging every executed SQL statement to the console.
-# - 'poolclass=NullPool' disables connection pooling, ensuring each session
-#   opens and closes a fresh physical connection (excellent for serverless/ASGI).
 engine = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool)
 
 # Create the Session Maker:
-# - 'expire_on_commit=False' prevents SQLAlchemy from refreshing database objects
-#   automatically after a 'commit', which is essential for async operations to avoid
-#   unexpected lazy-loading database calls.
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 # 2. BASE DECLARATIVE CLASS
-# The parent class for all our database model classes. Subclassing this
-# registers our models in SQLAlchemy's metadata registry, allowing it to
-# generate SQL tables dynamically.
+
 class Base(DeclarativeBase):
     pass
 

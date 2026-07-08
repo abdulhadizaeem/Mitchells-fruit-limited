@@ -988,6 +988,6 @@ class OutboundCallingService:
 outbound_service = OutboundCallingService()
 
 
-def start_recall_scheduler():
+async def start_recall_scheduler():
     """Create the background recall-scheduler task. Call once on app startup."""
     asyncio.create_task(outbound_service._recall_scheduler_loop())

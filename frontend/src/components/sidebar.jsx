@@ -287,7 +287,7 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
           padding: "12px 13px",
           marginBottom: 6,
           border: `1.5px solid ${agentActive === null ? C.border : isActive ? "rgb(87, 151, 224)" : C.border}`,
-          background: agentActive === null ? C.bg : isActive ? "rgba(29,184,122,.06)" : C.bg,
+          background: agentActive === null ? C.bg : isActive ? C.blueBg : C.bg,
           transition: "border-color .3s, background .3s"
         }}>
 
@@ -334,7 +334,7 @@ function SidebarContent({ collapsed, onCollapse, onClose, isMobile }) {
               onClick={toggleAgent}
               disabled={agentActive === null || agentToggling}
               style={{
-                background: agentToggling ? C.bg : isActive ? "rgba(229,69,69,.10)" : "rgba(29,184,122,.12)",
+                background: agentToggling ? C.bg : isActive ? C.goldBg : C.blueBg,
                 color: agentToggling ? C.textMuted : isActive ? C.gold : C.blue,
                 opacity: agentActive === null ? 0.5 : 1
               }}

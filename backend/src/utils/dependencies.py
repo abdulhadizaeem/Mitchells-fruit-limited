@@ -1,8 +1,3 @@
-# FASTAPI SECURITY DEPENDENCIES (Request Guards)
-# This module defines FastAPI dependencies that protect API endpoints.
-# The primary dependency here acts as a security guard to authenticate requests
-# using Bearer JWT tokens.
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
