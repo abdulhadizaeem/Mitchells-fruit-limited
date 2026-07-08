@@ -906,33 +906,38 @@ class OutboundCallingService:
                     for contact in due:
                         if contact.status == "calling":
                             continue
+                        # Capture plain strings before any try/rollback so that
+                        # expired ORM attributes are never accessed in except blocks
+                        contact_id = contact.id
+                        contact_phone = contact.phone_number
                         try:
                             campaign = contact.campaign
                             if not campaign:
                                 _logger.warning(
                                     "Skipping recall for contact=%s: no campaign",
-                                    contact.id,
+                                    contact_id,
                                 )
                                 continue
                             _logger.info(
                                 "Auto-recall dialling contact=%s phone=%s",
-                                contact.id,
-                                contact.phone_number,
+                                contact_id,
+                                contact_phone,
                             )
                             await self._dial_contact(db, campaign, contact)
                             await repo.update_contact(
                                 db, contact, recall_at=None
                             )
                             dialed_phones.add(
-                                normalize_phone_number(contact.phone_number)
+                                normalize_phone_number(contact_phone)
                             )
                             await repo.clear_call_log_recalls_for_phone(
-                                db, contact.phone_number
+                                db, contact_phone
                             )
                         except Exception as exc:
+                            await db.rollback()
                             _logger.error(
                                 "Auto-recall dial failed for contact=%s: %s",
-                                contact.id,
+                                contact_id,
                                 exc,
                             )
 
@@ -953,7 +958,23 @@ class OutboundCallingService:
                     for log in due_logs:
                         if not log.caller_phone:
                             continue
-                        phone_key = normalize_phone_number(log.caller_phone)
+                        # Skip logs with placeholder/invalid phone numbers
+                        raw_phone = (log.caller_phone or "").strip().lower()
+                        if raw_phone in ("unknown", "n/a", "", "none"):
+                            log.recall_at = None
+                            await db.commit()
+                            _logger.warning(
+                                "Skipping recall for call_log=%s: invalid phone '%s'",
+                                log.call_id,
+                                log.caller_phone,
+                            )
+                            continue
+                        # Capture plain strings before any try/rollback so that
+                        # expired ORM attributes are never accessed in except blocks
+                        log_call_id = log.call_id
+                        log_caller_phone = log.caller_phone
+                        log_direction = log.direction
+                        phone_key = normalize_phone_number(log_caller_phone)
                         if phone_key in dialed_phones:
                             log.recall_at = None
                             await db.commit()
@@ -962,9 +983,9 @@ class OutboundCallingService:
                             _logger.info(
                                 "Auto-recall dialling call_log=%s phone=%s "
                                 "direction=%s",
-                                log.call_id,
-                                log.caller_phone,
-                                log.direction,
+                                log_call_id,
+                                log_caller_phone,
+                                log_direction,
                             )
                             await self._dial_call_log_recall(db, log)
                             log.recall_at = None
@@ -974,7 +995,7 @@ class OutboundCallingService:
                             _logger.error(
                                 "Auto-recall dial failed for CallLog "
                                 "call=%s: %s",
-                                log.call_id,
+                                log_call_id,
                                 exc,
                             )
             except asyncio.CancelledError:
