@@ -342,12 +342,12 @@ class OutboundCampaign(Base):
     contacts: Mapped[list["OutboundContact"]] = relationship(
         "OutboundContact",
         back_populates="campaign",
-        lazy="selectin",
+        lazy="raise",
     )
     calls: Mapped[list["OutboundCall"]] = relationship(
         "OutboundCall",
         back_populates="campaign",
-        lazy="selectin",
+        lazy="raise",
     )
 
 
@@ -377,7 +377,7 @@ class OutboundContact(Base):
     campaign: Mapped["OutboundCampaign"] = relationship(
         "OutboundCampaign",
         back_populates="contacts",
-        lazy="selectin",
+        lazy="raise",
     )
 
 
@@ -414,11 +414,11 @@ class OutboundCall(Base):
     campaign: Mapped["OutboundCampaign"] = relationship(
         "OutboundCampaign",
         back_populates="calls",
-        lazy="selectin",
+        lazy="raise",
     )
     contact: Mapped["OutboundContact"] = relationship(
         "OutboundContact",
-        lazy="selectin",
+        lazy="raise",
     )
 
 
