@@ -1,10 +1,11 @@
+from operator import call
 import asyncio
 import logging
 import re
 import os
 import httpx
 from datetime import datetime, timezone, timedelta
-
+from sqlalchemy import select,Subquery
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -617,8 +618,8 @@ class OutboundCallingService:
                     log_record.customer_name = extracted_name
                     log_record.customer_name_extracted = extracted_name
                     await db.commit()
-            except Exception:
-                pass
+            except Exception as exc:
+                _logger.warning("Failed to mirror name to CallLog for %s: %s", call.retell_call_id, exc)
 
         # Auto-extract order details from summary if call ended
         if call_status in ("completed", "ended") and summary_text:
@@ -679,8 +680,8 @@ class OutboundCallingService:
                                 log_record.call_successful = True
                                 log_record.order_items = summary_text
                                 await db.commit()
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            _logger.warning("Failed to mirror order_booked to CallLog for %s: %s", call.retell_call_id, exc)
 
         return await repo.update_outbound_call(db, call, **updates)
 
@@ -942,7 +943,6 @@ class OutboundCallingService:
                             )
 
                     from src.utils.db import CallLog
-                    from sqlalchemy import select
 
                     now_utc = datetime.now(timezone.utc)
                     log_res = await db.execute(

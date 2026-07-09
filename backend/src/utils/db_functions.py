@@ -942,7 +942,7 @@ async def get_dashboard_stats(db: AsyncSession, days: int = 7) -> dict:
     from src.utils.db import CallLog, Order, Caller
     since = datetime.now(timezone.utc) - timedelta(days=days)
     
-    orders_subquery = select(Order.call_id).where(Order.call_id.isnot(None)).subquery()
+    orders_subquery = select(Order.call_id).where(Order.call_id.isnot(None))
     unlinked_orders = await db.scalar(
         select(func.count()).select_from(CallLog).where(
             CallLog.created_at >= since,
@@ -1074,7 +1074,7 @@ async def get_orders_over_time(db: AsyncSession, days: int = 7) -> list:
     formal_rows = result_formal.all()
     
     # 2. Fetch call-log unlinked draft orders count per day
-    orders_subquery = select(Order.call_id).where(Order.call_id.isnot(None)).subquery()
+    orders_subquery = select(Order.call_id).where(Order.call_id.isnot(None))
     result_draft = await db.execute(
         select(cast(CallLog.created_at, Date).label("day"), func.count().label("orders"))
         .where(CallLog.created_at >= since)
@@ -1130,7 +1130,7 @@ async def get_sentiment_breakdown(db: AsyncSession, days: int = 7) -> dict:
     returned from Retell AI analysis logs.
     """
     from datetime import datetime, timedelta, timezone
-    from sqlalchemy import func, select
+    from sqlalchemy import func
     from src.utils.db import CallLog
     
     since = datetime.now(timezone.utc) - timedelta(days=days)
